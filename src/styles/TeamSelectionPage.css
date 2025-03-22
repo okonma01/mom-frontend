@@ -1,0 +1,78 @@
+.team-selection-container {
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.team-selection-container h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #ffab00;
+}
+
+.teams-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.team-selector {
+  flex: 1;
+  text-align: center;
+}
+
+.team-selector h2 {
+  margin-bottom: 1rem;
+  color: #e0e0e0;
+}
+
+.team-selector select {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  background-color: #333;
+  color: #fff;
+  border: 1px solid #555;
+  border-radius: 4px;
+}
+
+.versus {
+  margin: 0 1rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffab00;
+}
+
+.start-simulation-button {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  background-color: #ffab00;
+  color: #121212;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.start-simulation-button:hover {
+  background-color: #ffc400;
+}
+
+@media (max-width: 480px) {
+  .teams-container {
+    flex-direction: column;
+  }
+  
+  .team-selector {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  
+  .versus {
+    margin: 1rem 0;
+  }
+}

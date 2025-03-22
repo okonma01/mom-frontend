@@ -1,0 +1,21 @@
+{
+  "name": "mom-frontend",
+  "version": "0.1.0",
+  "description": "Make or Miss Basketball Simulation Frontend",
+  "license": "MIT",
+  "scripts": {
+    "start": "vite",
+    "preview": "vite preview",
+    "build": "vite build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^6.20.0"
+  },
+  "devDependencies": {
+    "vite": "^6.2.0"
+  }
+}

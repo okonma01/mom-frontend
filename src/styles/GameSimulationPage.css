@@ -1,0 +1,13 @@
+.game-simulation-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 1rem;
+  background-color: #121212;
+}
+
+@media (max-width: 480px) {
+  .game-simulation-container {
+    padding: 0.5rem;
+  }
+}

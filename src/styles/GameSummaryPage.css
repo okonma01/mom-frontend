@@ -1,0 +1,136 @@
+.game-summary-container {
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.game-summary-container h1 {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #ffab00;
+}
+
+.final-score {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.team {
+  text-align: center;
+}
+
+.team h2 {
+  margin-bottom: 0.5rem;
+  color: #e0e0e0;
+}
+
+.score {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #ffab00;
+}
+
+.vs {
+  font-size: 1.5rem;
+  color: #888;
+}
+
+.result-message {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.result-message h3 {
+  color: #ffab00;
+  font-size: 1.5rem;
+}
+
+.key-stats {
+  margin-bottom: 2rem;
+  background-color: #222;
+  padding: 1rem;
+  border-radius: 8px;
+}
+
+.key-stats h3 {
+  margin-bottom: 1rem;
+  color: #e0e0e0;
+  text-align: center;
+}
+
+.stats-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #333;
+}
+
+.stat-label {
+  color: #aaa;
+}
+
+.stat-values {
+  display: flex;
+  gap: 1rem;
+}
+
+.home-stat, .away-stat {
+  min-width: 40px;
+  text-align: center;
+}
+
+.home-stat {
+  color: #64b5f6;
+}
+
+.away-stat {
+  color: #e57373;
+}
+
+.summary-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.play-again-button, .watch-replay-button {
+  flex: 1;
+  padding: 1rem;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.play-again-button {
+  background-color: #4caf50;
+  color: white;
+}
+
+.watch-replay-button {
+  background-color: #2196f3;
+  color: white;
+}
+
+.play-again-button:hover {
+  background-color: #43a047;
+}
+
+.watch-replay-button:hover {
+  background-color: #1e88e5;
+}
+
+@media (max-width: 480px) {
+  .summary-actions {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,767 @@
+Directory structure:
+└── okonma01-make-or-miss/
+    ├── README.md
+    ├── LICENSE
+    ├── main.py
+    ├── requirements.txt
+    ├── todo.md
+    ├── ui.md
+    ├── ui.txt
+    ├── data/
+    │   ├── games/
+    │   └── teams/
+    │       ├── celtics24.csv
+    │       ├── nuggets23.csv
+    │       └── template.csv
+    ├── game/
+    ├── player/
+    ├── team/
+    │   ├── __init__.py
+    │   ├── gen_team.py
+    │   ├── index.py
+    │   ├── stat.py
+    │   ├── util.py
+    │   └── __pycache__/
+    └── util/
+        ├── __init__.py
+        ├── helpers.py
+        ├── team_util.py
+        └── __pycache__/
+
+================================================
+File: README.md
+================================================
+# Make or Miss - Basketball Simulation
+
+Welcome to the "Make or Miss" basketball simulation project. This simulation provides a detailed basketball game engine with events logging, team management, and player interactions. The project is designed to simulate basketball games and record detailed event data for later visualization and analysis.
+
+## Project Structure
+
+The repository is organized into several directories:
+
+- `game/`: Contains the core game engine, event logging, game state management, and related utilities.
+- `team/`: Includes team-related functionality and data.
+- `player/`: Manages player attributes, ratings, and statistics.
+- `util/`: Contains utility modules for various project aspects, including data loading functions.
+- `data/`: Stores team and generated game data and simulation results.
+
+## Key Components
+
+### Game Engine
+
+The `game/` directory houses the game engine responsible for simulating basketball matches. Key features include:
+- Event-driven game flow (tip-off, possessions, shots, rebounds, free throws, etc.)
+- Player selection based on skills and ratings
+- Game state management (clock, score, quarter tracking)
+- Comprehensive event logging for game playback and analysis
+
+### Event Logging System
+
+The simulation implements a hybrid event logging approach:
+- Records detailed events during game simulation (shots, rebounds, fouls, etc.)
+- Creates checkpoints at strategic times (quarter boundaries) to store complete game state
+- Outputs structured JSON data for frontend visualization
+
+### Team Management
+
+The `team/` directory contains modules to manage team data, including:
+- Team compositions and lineups
+- Team statistics tracking
+- Utility functions for team operations
+
+### Player Attributes
+
+The `player/` directory manages player-related functionalities, including:
+- Player attributes and ratings
+- Performance statistics tracking
+- Skill-based selection mechanics for game actions
+
+### Data Organization
+
+Team data is stored in CSV format in the `data/teams/` directory:
+- Each team has its own CSV file with player attributes
+- The simulation can load any team from this directory
+- CSV files follow a standard format with player attributes, ratings, and positions
+
+## Getting Started
+
+To get started with the simulation, follow these steps:
+
+1. Clone the repository: `git clone https://github.com/okonma01/make-or-miss.git`
+2. Install the required dependencies: `pip install -r requirements.txt`
+3. Run the simulation: `python main.py`
+
+The simulation will load team data from CSV files and generate a complete game simulation with detailed event logs saved as JSON.
+
+## Current Development
+
+The project is currently focused on:
+1. Refining the game engine and event logging system
+2. Creating a checkpoint system for efficient game state recall
+3. Preparing for frontend visualization of game simulations
+4. Testing and validating the event data structure
+
+## Credits
+
+This project is maintained by Okonma.
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+
+================================================
+File: LICENSE
+================================================
+MIT License
+
+Copyright (c) 2025 Okonma
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+================================================
+File: main.py
+================================================
+from util.team_util import load_team_from_csv
+from game.index import Game
+import os
+
+
+def run_simulation_and_save_events(home_team_name, away_team_name):
+    """
+    Load teams from CSV, run a game simulation, and save events to a JSON file
+
+    Args:
+        home_team_csv: Path to home team CSV file
+        away_team_csv: Path to away team CSV file
+        output_json_path: Path to save the JSON output
+    """
+
+    # Build paths to team files
+    teams_dir = os.path.join('data', 'teams')
+    home_team_csv = os.path.join(teams_dir, f"{home_team_name}.csv")
+    away_team_csv = os.path.join(teams_dir, f"{away_team_name}.csv")
+
+    # Load teams
+    home_team = load_team_from_csv(home_team_csv)
+    away_team = load_team_from_csv(away_team_csv)
+
+    # Create and run game
+    game = Game()
+    game.teams = [home_team, away_team]
+    game.play_game()
+
+    # Get event log and save to JSON
+    event_log = game.logger.event_log
+
+    # Save event log to JSON file
+    event_log.to_json()
+
+    return game
+
+
+# Run the simulation
+g = run_simulation_and_save_events('celtics.csv', 'nuggets.csv')
+
+
+
+================================================
+File: requirements.txt
+================================================
+transitions
+datetime
+names
+
+
+================================================
+File: todo.md
+================================================
+Based on our discussion and the code we've developed so far, here are the next logical steps to implement the hybrid approach for your basketball simulation frontend:
+
+## Next Steps
+
+1. **Integration with Game Engine**
+   - Determine where to insert logger calls in your game engine
+   - Identify key points in the game flow to record events
+   - Plan how to handle checkpoints for the hybrid approach
+
+2. **Create Checkpoint System**
+   - Design how to store complete game state at regular intervals
+   - Decide on checkpoint frequency (every minute, quarter boundaries, etc.)
+   - Plan the structure for storing state between checkpoints
+
+3. **User Interface Planning**
+   - Sketch the UI layout for the game visualization
+   - Design the controls for navigating game timeline
+   - Plan how to display team and player information
+
+4. **Testing Strategy**
+   - Create a test game to generate sample JSON data
+   - Validate the structure and completeness of logged events
+   - Ensure all required game state is captured
+
+5. **Frontend Development Preparation**
+   - Choose frontend technologies (React, Vue, plain JavaScript, etc.)
+   - Plan how the frontend will parse and display the JSON data
+   - Design how to handle navigation between checkpoints
+
+6. **Connecting Backend to Frontend**
+   - Design API endpoints to serve game data
+   - Plan how to stream or chunk data to the frontend
+   - Consider caching strategies for better performance
+
+Would you like to focus on any particular step first? We could start by planning where to integrate the logger into your game engine, or we could begin designing the checkpoint system for the hybrid approach.
+
+
+================================================
+File: ui.md
+================================================
+- Minimalistic all the way.
+
+- Ensure the UI is responsive and adapts well to different screen sizes, if appropriate for the project.
+
+- Use consistent color schemes and typography that align with the project.
+
+- Implement accessible design practices, including proper contrast and keyboard navigation, where feasible.
+
+- Incorporate appropriate whitespace and visual hierarchy to improve readability, if it enhances the design.
+
+- Use familiar UI patterns and components to enhance usability, when it makes sense for the application.
+
+- Implement error handling and user feedback mechanisms for a better user experience, if relevant to the project.
+
+- Ensure the UI is consistent across different browsers and devices, where possible.
+
+- Implement dark mode or theme options if appropriate for the application and user needs.
+
+- Use appropriate animations and micro-interactions to enhance user engagement, if it adds value to the user experience.
+
+- Do consider darkmode and light mode when you design the ui 
+
+
+================================================
+File: ui.txt
+================================================
+Accessing Stats in a Minimalist Design
+
+1. Player Card Pop-ups
+When clicking on a player dot on the court, a small card appears with basic stats
+Stats shown: Points, rebounds, assists, fouls, minutes played
+Option to expand for more detailed stats
+
+2. Collapsible Stats Panel
+Add a subtle "Stats" tab on the side or bottom of the screen
+When clicked, it expands to show team and player statistics
+Can be toggled closed to return to minimal view
+
+3. Hover States
+Hovering over a player name in the event feed shows a tooltip with key stats
+Keeps the interface clean while making information accessible
+
+4. Box Score Toggle
+Simple button in the corner labeled "Box Score"
+When activated, replaces the court view temporarily with a traditional box score table
+Button to switch back to court view
+
+5. Player List Under Team Names
+Small player icons under each team name in the scoreboard
+Click to expand a dropdown with that player's current stats
+Color-coded to show starters vs bench
+
+The beauty of a minimalist approach is that you can start with these subtle access points and gradually add more features based on user feedback without overwhelming the interface.
+
+
+
+================================================
+File: data/teams/celtics24.csv
+================================================
+no,name,pos,height,stre,stam,spd,jmp,ins,mid,tp,ft,pss,hndl,reb,oiq,diq,dur
+7,Jaylen Brown,GF,6-6,65,95,85,85,80,80,75,75,65,75,65,85,85,90
+30,Sam Hauser,F,6-8,55,85,60,60,55,80,80,80,45,50,55,70,55,80
+4,Jrue Holiday,G,6-4,60,90,80,70,65,80,75,85,85,85,60,75,95,80
+42,Al Horford,C,6-9,85,95,50,60,65,75,75,80,70,50,70,80,85,75
+8,Kristaps Porziņģis,FC,7-2,70,90,65,75,80,65,75,80,50,65,65,80,80,70
+11,Payton Pritchard,G,6-1,40,85,75,55,75,85,90,85,75,80,45,80,55,80
+0,Jayson Tatum,F,6-8,70,95,80,80,85,80,80,85,75,80,70,90,85,90
+26,Xavier Tillman Sr.,FC,6-8,75,85,45,65,60,60,55,50,55,55,65,55,75,80
+9,Derrick White,G,6-4,55,90,90,70,65,75,80,80,85,80,60,80,90,85
+
+
+================================================
+File: data/teams/nuggets23.csv
+================================================
+no,name,pos,height,stre,stam,spd,jmp,ins,mid,tp,ft,pss,hndl,reb,oiq,diq,dur
+0,Christian Braun,G,6-6,55,80,70,70,50,55,60,70,60,70,50,60,60,85
+11,Bruce Brown,GF,6-4,60,80,80,80,55,60,55,55,60,65,80,70,85,85
+5,Kentavious Caldwell-Pope,G,6-5,55,80,75,55,55,60,75,65,50,60,55,70,75,85
+50,Aaron Gordon,F,6-8,75,80,70,80,65,65,65,65,65,60,75,75,80,85
+32,Jeff Green,FC,6-8,75,80,60,65,55,45,70,60,55,50,70,70,75,85
+15,Nikola Jokić,C,6-11,80,80,55,70,90,85,80,80,95,80,85,99,70,85
+27,Jamal Murray,G,6-4,50,80,75,55,85,90,80,85,80,90,50,90,60,85
+1,Michael Porter Jr.,F,6-10,60,80,70,75,65,70,75,80,55,60,80,65,70,85
+
+
+================================================
+File: data/teams/template.csv
+================================================
+no,icon_path,name,pos,height,stre,stam,spd,jmp,ins,mid,tp,ft,pss,hndl,reb,oiq,diq,dur
+
+
+
+
+================================================
+File: team/__init__.py
+================================================
+
+
+
+================================================
+File: team/gen_team.py
+================================================
+import names
+
+from player.gen_player import gen_player
+from team.index import TeamGameSim
+
+
+def gen_team() -> TeamGameSim:
+    t = TeamGameSim()
+    teamName = names.get_last_name()
+    if teamName[-1] == 'z':
+        pass
+    if teamName[-2:] == 'ch' or teamName[-2:] == 'sh':
+        teamName += 'es'
+    elif teamName[-1] != 's':
+        teamName += 's'
+    if teamName[:2] == 'Mc':
+        teamName = teamName[:2] + teamName[2:].title()
+    teamName = 'Los ' + teamName
+    t._name = teamName
+    t._players = [gen_player(x//3 + 1) for x in range(15)]
+    t.set_lineup()
+    return t
+
+
+================================================
+File: team/index.py
+================================================
+from typing import List
+from player.position import Position
+from player.overall import fatigue_adj_ovr, overall
+from player.index import PlayerGameSim, pos_dict
+from team.stat import TeamStat
+from team.util import get_best_at_position, get_pos_depths
+from util.helpers import generate_id
+
+# changed team stat mp to float type - DONE
+# commented out pos and opp_pos in team stat - DONE
+
+# change team stat mp back to int type (for seconds) - DONE
+# remove trb from team stat.py
+# add asta to team stat.py
+
+class TeamGameSim():
+    count = 0
+    depth_dict = {Position.G:  3,  # g + gf
+                  Position.GF: 3,  # g + gf
+                  Position.F:  4,  # gf + f
+                  Position.FC: 3,  # f + fc
+                  Position.C:  3}  # fc + c
+
+    def __init__(self) -> None:
+        self._id: str = generate_id(self)
+        TeamGameSim.count += 1
+        self._name: str = str()
+        self._players: List[PlayerGameSim] = list()
+        self._lineup: List[PlayerGameSim] = list()
+        self._bench: List[PlayerGameSim] = list()
+        self._stat: TeamStat = TeamStat()
+
+    def clear_stat(self) -> None:
+        for s in self._stat.__dict__:
+            self._stat.__dict__[s] = 0
+
+    def set_lineup(self) -> None:
+        sorted_list = []
+        player_set = set()
+        for i in range(1, 6):
+            player_set = set(self._players) - set(sorted_list)
+            sorted_list.append(get_best_at_position(i, player_set))
+
+        depths = {pos: 0 for pos in Position}
+        for pos in Position:
+            depths[pos] = get_pos_depths(pos, sorted_list)
+            while depths[pos] < TeamGameSim.depth_dict[pos]:
+                player_set = set(self._players) - set(sorted_list)
+                nth_man = get_best_at_position(pos.value, player_set)
+                if (nth_man):
+                    sorted_list.append(nth_man)
+                    depths[pos] += 1
+                else:
+                    break
+
+        self._lineup = sorted_list[:5]
+        self._bench = sorted_list[5:]
+
+    def print_roster(self, x: int = 0, fatigue: bool = False) -> List:
+        if fatigue:
+            if x == 0:
+                return [p._pos.name + ' ' + str(fatigue_adj_ovr(p, p._pos.value)) for p in self._lineup]
+            else:
+                return [p._pos.name + ' ' + str(fatigue_adj_ovr(p, p._pos.value)) for p in self._bench]
+        else:
+            if x == 0:
+                return [p._pos.name + ' ' + str(overall(p, p._pos)) for p in self._lineup]
+            else:
+                return [p._pos.name + ' ' + str(overall(p, p._pos)) for p in self._bench]
+
+
+
+================================================
+File: team/stat.py
+================================================
+from dataclasses import dataclass
+
+@dataclass
+class TeamStat():
+    g: int = 0
+    mp: float = 0
+    fg: int = 0
+    fga: int = 0
+    tp: int = 0
+    tpa: int = 0
+    twop: int = 0
+    twopa: int = 0
+    ft: int = 0
+    fta: int = 0
+    orb: int = 0
+    drb: int = 0
+    trb: int = 0
+    ast: int = 0
+    stl: int = 0
+    blk: int = 0
+    tov: int = 0
+    pf: int = 0
+    # pos: int = 0
+    pts: int = 0
+    opp_g: int = 0
+    opp_mp: float = 0
+    opp_fg: int = 0
+    opp_fga: int = 0
+    opp_tp: int = 0
+    opp_tpa: int = 0
+    opp_twop: int = 0
+    opp_twopa: int = 0
+    opp_ft: int = 0
+    opp_fta: int = 0
+    opp_orb: int = 0
+    opp_drb: int = 0
+    opp_trb: int = 0
+    opp_ast: int = 0
+    opp_stl: int = 0
+    opp_blk: int = 0
+    opp_tov: int = 0
+    opp_pf: int = 0
+    # opp_pos: int = 0
+    opp_pts: int = 0
+
+
+================================================
+File: team/util.py
+================================================
+from typing import List
+from player.index import PlayerGameSim, pos_dict
+from player.position import Position
+
+def sort_team(players: List[PlayerGameSim], depth: int) -> List[PlayerGameSim]:
+    sorted_list = []
+    for i in range(1, 6):
+        player_set = set(players) - set(sorted_list)
+        sorted_list.append(get_best_at_position(i, player_set))
+    
+    for i in range(1, depth-4):
+        player_set = set(players) - set(sorted_list)
+        sorted_list.append(get_best_at_position(i, player_set))
+
+    return sorted_list
+
+def get_pos_depths(pos: Position, l: List[PlayerGameSim] = list()) -> int:
+        if l == []:
+            return 0
+        depth = 0
+        for player in l:
+            if player._pos in pos_dict[pos.value]:
+                depth += 1
+        return depth
+
+def get_best_at_position(i: int, pool: List, sub: bool = False) -> PlayerGameSim:
+    if len(pool) == 0:
+        return None
+        
+    # first filter out injured players
+    pool = [p for p in pool if not p._injured]
+
+    # sub = True (for subs) or False (for starters)
+    if sub:
+        pool = [p for p in pool if p.stat('bench_time') > 0]
+    best = sorted(pool, key= lambda p: p.ovr(i), reverse=True)[0]
+    if best.ovr(i) == -1:
+        return None
+    return best
+
+
+
+
+================================================
+File: util/__init__.py
+================================================
+
+
+
+================================================
+File: util/helpers.py
+================================================
+from typing import List
+import secrets, string
+# import game
+# import game.index
+# import player
+# import player.index
+# import team
+# import team.index
+
+
+def weights(n: int = 10, sum: int = 100, delta: float = 0.2) -> List[float]:
+    if n <= 1:
+        return [sum]
+
+    init_list = [round(sum/n, 2) for i in range(n)]
+
+    for i in range(round(n/2)+1):
+        init_list[i] += delta * i
+        init_list[i] = round(init_list[i], 1)
+        init_list[-i] -= delta * i
+        init_list[-i] = round(init_list[-i], 1)
+
+    init_list.sort()
+    init_list.reverse()
+    return init_list
+
+
+def bound(x: float = 0, low: float = 0, high: float = 100) -> float:
+    if x < low:
+        return low
+    elif x > high:
+        return high
+    else:
+        return x
+
+
+def height_in_feet(height_in_inches: int) -> str:
+    feet = height_in_inches // 12
+    inches = height_in_inches % 12
+    return str(feet) + '\'' + str(inches) + '\"'
+
+
+def height_rating(height_in_inches: int) -> int:
+    min_hgt = 66    # 5'6"
+    max_hgt = 93    # 7'9"
+    hgt = bound((100 * (height_in_inches - min_hgt)) / (max_hgt - min_hgt))
+    return int(hgt)
+
+
+def generate_id(obj_type, len=4) -> str:
+    # if isinstance(obj_type, player.index.PlayerGameSim):
+    #     prefix = 'p'
+    # elif isinstance(obj_type, team.index.TeamGameSim):
+    #     prefix = 't'
+    # elif isinstance(obj_type, game.index.Game):
+    #     prefix = 'g'
+    # # to add: league, season, etc.
+    # else:
+    #     prefix = ''
+
+    prefix = type(obj_type).__name__[0].lower()
+    
+    characters = string.ascii_letters + string.digits  # A-Z, a-z, 0-9
+    random_id = ''.join(secrets.choice(characters) for _ in range(len))
+    
+    return prefix + random_id
+
+
+================================================
+File: util/team_util.py
+================================================
+import csv
+import os
+from typing import List, Optional
+from pathlib import Path
+
+from team.index import TeamGameSim
+from player.index import PlayerGameSim
+from player.position import Position
+from player.rating import Rating
+from util.helpers import height_rating
+import pickle
+
+path = '/Users/daniel/Documents/Python/mom/app/'
+
+def save_team(t: TeamGameSim) -> None:
+    fp = path + 'db/teams/' + t._name + '.pickle'
+    # if not os.path.exists(fp):
+    #     os.makedirs(fp)
+    pickle_out = open(fp, 'wb')
+    pickle.dump(t, pickle_out)
+    pickle_out.close()
+    print('Save successful: File path: ' + fp)
+    return
+
+def load_team(name: str) -> TeamGameSim:
+    fp = path + 'db/teams/' + str(name) + '.pickle'
+    if os.path.exists(fp):
+        pickle_in = open(fp, 'rb')
+        print('Loaded successfully!')
+        return pickle.load(pickle_in)
+    else:
+        print('Load failed: No saved team named ' + str(name))
+        return
+
+def load_team_from_csv(csv_path: str, team_name: Optional[str] = None) -> TeamGameSim:
+    """
+    Load team data from a CSV file and create a TeamGameSim object.
+    
+    Args:
+        csv_path: Path to the CSV file
+        team_name: Optional name for the team (defaults to filename without extension)
+        
+    Returns:
+        TeamGameSim object populated with players from the CSV
+    """
+    # Use filename as team name if not provided
+    if team_name is None:
+        team_name = Path(csv_path).stem
+    
+    # Create the team
+    team = TeamGameSim()
+    team._name = team_name
+    
+    # Read the CSV file
+    with open(csv_path, 'r') as f:
+        reader = csv.DictReader(f)
+        
+        for row in reader:
+            # Create a new player
+            player = PlayerGameSim()
+            
+            # Set basic attributes
+            player._jersey_no = int(row['no'])
+            player._name = row['name']
+            
+            # Set position based on csv value
+            pos_str = row['pos']
+            if pos_str == 'G':
+                player._pos = Position.G
+            elif pos_str == 'GF':
+                player._pos = Position.GF
+            elif pos_str == 'F':
+                player._pos = Position.F
+            elif pos_str == 'FC':
+                player._pos = Position.FC
+            elif pos_str == 'C':
+                player._pos = Position.C
+            
+            # Set height
+            player_height = row['height']
+            # convert from feet-inches to inches
+            feet, inches = player_height.split('-')
+            player._height_in_inches = int(feet) * 12 + int(inches)
+            
+            # Set player attributes
+            rating = Rating()
+            rating.hgt = height_rating(player._height_in_inches)
+            rating.stre = int(row['stre'])
+            rating.stam = int(row['stam'])
+            rating.spd = int(row['spd'])
+            rating.jmp = int(row['jmp'])
+            rating.ins = int(row['ins'])
+            rating.mid = int(row['mid'])
+            rating.tp = int(row['tp'])
+            rating.ft = int(row['ft'])
+            rating.pss = int(row['pss'])
+            rating.hndl = int(row['hndl'])
+            rating.reb = int(row['reb'])
+            rating.oiq = int(row['oiq'])
+            rating.diq = int(row['diq'])
+            rating.dur = int(row['dur'])
+            rating.update_composite()
+            player._rating = rating
+            
+            # Initialize game-specific attributes
+            player._stat.energy = 100  # Players start with full energy
+            player.clear_stat()   # Clear any default stats
+            
+            # Add the player to the team
+            team._players.append(player)
+    
+    # Set lineup based on positions and ratings
+    team.set_lineup()
+    
+    return team
+
+def save_teams_from_csv_directory(directory_path: str, output_directory: str = None) -> List[str]:
+    """
+    Convert all CSV files in a directory to team pickle files.
+    
+    Args:
+        directory_path: Path to directory containing CSV files
+        output_directory: Optional directory to save pickle files (defaults to db/teams/)
+        
+    Returns:
+        List of team names that were processed
+    """
+    if output_directory is None:
+        output_directory = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'db', 'teams')
+    
+    # Ensure output directory exists
+    os.makedirs(output_directory, exist_ok=True)
+    
+    team_names = []
+    
+    # Process each CSV file
+    for filename in os.listdir(directory_path):
+        if filename.endswith('.csv'):
+            file_path = os.path.join(directory_path, filename)
+            team_name = Path(filename).stem
+            
+            # Load team from CSV
+            team = load_team_from_csv(file_path, team_name)
+            team_names.append(team_name)
+            
+            # Save as pickle
+            pickle_path = os.path.join(output_directory, f"{team_name}.pickle")
+            with open(pickle_path, 'wb') as f:
+                pickle.dump(team, f)
+            
+            print(f"Converted {filename} to {team_name}.pickle")
+    
+    return team_names
+
+
+
