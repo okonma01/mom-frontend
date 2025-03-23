@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import '../styles/GameSummaryPage.css';
+import { getAssetPath } from "../utils/paths";
 
 function GameSummaryPage() {
   const { gameId } = useParams();
@@ -14,7 +15,7 @@ function GameSummaryPage() {
     const fetchGame = async () => {
       try {
         console.log("Fetching game summary data...");
-        const response = await fetch(`/game_${gameId}.json`);
+        const response = await fetch(getAssetPath(`game_${gameId}.json`));
         const data = await response.json();
         console.log("Game summary data loaded:", data);
         setGameData(data);

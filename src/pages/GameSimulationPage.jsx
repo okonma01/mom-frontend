@@ -11,6 +11,7 @@ import Scoreboard from "../components/Scoreboard";
 import EventFeed from "../components/EventFeed";
 import DVRControls from "../components/DVRControls";
 import "../styles/GameSimulationPage.css";
+import { getAssetPath } from "../utils/paths";
 
 function useScoreState() {
   const [scores, setScores] = useState({ home: 0, away: 0 });
@@ -52,9 +53,8 @@ function GameSimulationPage() {
   useEffect(() => {
     const fetchGame = async () => {
       try {
-        // In a real app, this would be an API call
-        // For now, we'll use the JSON file directly
-        const response = await fetch(`/game_${gameId}.json`);
+        // Use the utility function to get the correct path
+        const response = await fetch(getAssetPath(`game_${gameId}.json`));
         const data = await response.json();
         setGameData(data);
         setLoading(false);
