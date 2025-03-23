@@ -1,0 +1,190 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap');
+
+.broadcast-scoreboard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  /* height: 110px; */
+  background-color: #ffffff;
+  color: #212529;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Left and Right Team Sections */
+.scoreboard-left, .scoreboard-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 35%; /* Increased from 25% to reduce center whitespace */
+  padding: 10px 15px;
+  position: relative;
+  border-radius: 0;
+  transition: transform 0.3s ease;
+}
+
+.scoreboard-left:hover, .scoreboard-right:hover {
+  transform: scale(1.02);
+}
+
+.team-record {
+  position: absolute;
+  top: 5px;
+  right: 10px; /* Position to the right instead of centered */
+  font-size: 0.8rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.team-logo {
+  width: 45px;
+  /* height: 45px; */
+  object-fit: contain;
+  margin: 15px 0 8px; /* Increased top margin to make room for record */
+}
+
+.team-name {
+  font-size: 1.2rem;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Center Score Section */
+.scoreboard-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 30%; /* Decreased from 50% to reduce whitespace */
+  /* background-color: #ffffff; */
+  /* padding: 10px; */
+  /* border-left: 2px solid #e9ecef;
+  border-right: 2px solid #e9ecef; */
+}
+
+.score-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* margin-bottom: 5px; */
+}
+
+.score {
+  font-size: 2.6em !important;
+  min-width: 40px; 
+  text-align: center;
+  /* font-family: 'Oswald'; */
+  /* font-weight: bold;
+  color: #212529;
+  text-shadow: 1px 1px 1px rgba(0,0,0,0.1); */
+}
+
+.score, .score-divider, .time-display, .quarter-indicator {
+  font-family: 'Oswald', sans-serif;
+  font-weight: 600;
+}
+
+.score-divider {
+  font-size: 2.5rem;
+  margin: 0 5px; /* Reduced from 10px */
+  color: #6c757d;
+}
+
+.time-display {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Reduced from 15px */
+}
+
+.quarter-indicator {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #007bff;
+  padding: 3px 8px;
+  /* background-color: #f8f9fa; */
+  /* border-radius: 4px;
+  border: 1px solid #dee2e6; */
+}
+
+.time-remaining {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* Live Indicator */
+.live-indicator {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #dc3545;
+  display: flex;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #dc3545;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+/* Score Update Animation */
+@keyframes scoreUpdate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.score-updated {
+  animation: scoreUpdate 0.5s ease;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .broadcast-scoreboard {
+    height: auto;
+  }
+  
+  .team-logo {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .team-name {
+    font-size: 1rem;
+  }
+  
+  .score {
+    font-size: 2rem;
+    min-width: 50px;
+  }
+  
+  .quarter-indicator, .time-remaining {
+    font-size: 1rem;
+  }
+  
+  .live-indicator {
+    font-size: 0.7rem;
+  }
+}

@@ -18,7 +18,7 @@ function TeamSelectionPage() {
   const handleStartSimulation = () => {
     // In a real app, you might create a new game or load an existing one
     // For now, we'll just navigate to the predefined game
-    navigate('/game/g9YJw');
+    navigate('/game/gkRPr');
   };
 
   return (
