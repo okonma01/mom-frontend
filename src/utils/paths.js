@@ -4,6 +4,9 @@
  * In development/preview, assets are served from the root
  */
 export function getAssetPath(path) {
+  // Normalize the path to remove any redundant slashes
+  const normalizePath = (path) => path.replace(/\/+/g, '/').replace(/\/$/, '');
+
   // Remove leading slash if present
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
   
@@ -12,5 +15,7 @@ export function getAssetPath(path) {
   const isGitHubPages = window.location.hostname.includes('github.io');
   
   // In GitHub Pages production, prepend the base path
-  return isGitHubPages ? `/mom-frontend/${cleanPath}` : `/${cleanPath}`;
+  const basePath = isGitHubPages ? `/mom-frontend/${cleanPath}` : `/${cleanPath}`;
+  
+  return normalizePath(basePath);
 }

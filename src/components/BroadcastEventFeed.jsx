@@ -46,20 +46,10 @@ const getPlayerImagePath = (playerId, gameInfo) => {
 
 const BroadcastEventFeed = ({ events, gameInfo }) => {
   const feedRef = useRef(null);
-  const eventsEndRef = useRef(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [highlightedEvent, setHighlightedEvent] = useState(null);
+  // const [highlightedEvent, setHighlightedEvent] = useState(null);
   
-  // Auto-scroll to the bottom when new events come in
-  useEffect(() => {
-    if (eventsEndRef.current && events.length > 0) {
-      eventsEndRef.current.scrollIntoView({ behavior: 'smooth' });
-      
-      // Highlight the latest event
-      setHighlightedEvent(events.length - 1);
-      setTimeout(() => setHighlightedEvent(null), 3000);
-    }
-  }, [events.length]);
+  // Auto-scroll functionality removed since newest events will be at the top
 
   // Helper to get team info from team_id
   const getTeamInfo = (teamId) => {
@@ -198,9 +188,9 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
   const getEventClassNames = (event, index) => {
     let classNames = 'broadcast-event';
     
-    if (highlightedEvent === index) {
-      classNames += ' event-highlight-animation';
-    }
+    // if (highlightedEvent === index) {
+    //   classNames += ' event-highlight-animation';
+    // }
     
     if (event.event_type === 'quarter_end' || event.event_type === 'game_over') {
       classNames += ' event-period';
@@ -238,7 +228,7 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
       
       <div className="broadcast-content" ref={feedRef}>
         <div className="broadcast-events">
-          {events.map((event, index) => {
+          {events.slice().reverse().map((event, index) => {
             let playerId = event.player_id;
             let teamShortName = getTeamInfo(event.team_id).shortName;
             if (event.event_type === 'turnover') {
@@ -259,14 +249,13 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
                   className="player-icon"
                   onError={(e) => {
                     e.target.onerror = null; 
-                    e.target.src = "/assets/players/default.png";
+                    e.target.src = `/assets/player icons/${event.teams[event.team_id].team_name.split(' ').pop().toLowerCase()}/default.png`;
                   }} 
                 />
               )}
               <div className="event-time">
                 {event.quarter}Q {event.timestamp}
               </div>
-              <div className="event-icon">{getEventIcon(event)}</div>
               <div className="event-team">
                 {teamShortName}
               </div>
@@ -275,7 +264,6 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
               </div>
             </div>
           )})}
-          <div ref={eventsEndRef} />
         </div>
       </div>
     </div>

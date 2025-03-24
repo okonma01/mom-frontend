@@ -7,6 +7,8 @@
   "scripts": {
     "start": "vite",
     "preview": "vite preview",
+    "clean": "rimraf dist",
+    "preinstall": "npx only-allow npm",
     "build": "vite build",
     "build:ghpages": "vite build --base=/mom-frontend/",
     "predeploy": "npm run build:ghpages",

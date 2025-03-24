@@ -1,1 +1,12 @@
 node_modules/.cache/gh-pages
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Environment
+.env.local
+.env.*.local
+
+# Build artifacts
+/dist
