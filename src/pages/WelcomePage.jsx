@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import '../styles/WelcomePage.css';
+import Footer from "../components/Footer";
 
 function WelcomePage() {
   return (
@@ -11,6 +12,7 @@ function WelcomePage() {
         <Link to="/select-teams" className="start-button">
           Start
         </Link>
+        <Footer />
       </div>
     </div>
   );

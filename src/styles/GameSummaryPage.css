@@ -1,7 +1,9 @@
-/* .game-summary-container {
+.game-summary-container {
   padding: 2rem;
   max-width: 600px;
   margin: 0 auto;
+  position: relative;
+  /* Add this to ensure proper positioning context */
 }
 
 .game-summary-container h1 {
@@ -26,11 +28,6 @@
   color: #e0e0e0;
 }
 
-.score {
-  font-size: 3rem;
-  font-weight: bold;
-  color: #ffab00;
-}
 
 .vs {
   font-size: 1.5rem;
@@ -82,7 +79,8 @@
   gap: 1rem;
 }
 
-.home-stat, .away-stat {
+.home-stat,
+.away-stat {
   min-width: 40px;
   text-align: center;
 }
@@ -101,7 +99,8 @@
   gap: 1rem;
 }
 
-.play-again-button, .watch-replay-button {
+.play-again-button,
+.watch-replay-button {
   flex: 1;
   padding: 1rem;
   border-radius: 4px;
@@ -133,4 +132,4 @@
   .summary-actions {
     flex-direction: column;
   }
-} */
+}

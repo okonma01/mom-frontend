@@ -4,6 +4,7 @@
   align-items: center;
   height: 100vh;
   background-color: #121212;
+  position: relative; /* Add this to ensure proper positioning context */
 }
 
 .welcome-content {

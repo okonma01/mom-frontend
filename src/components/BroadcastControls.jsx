@@ -25,8 +25,8 @@ const BroadcastControls = ({
         <input 
           type="range" 
           min="0.5" 
-          max="3" 
-          step="0.1" 
+          max="2" 
+          step="0.25" 
           value={playbackSpeed} 
           onChange={(e) => onSpeedChange(Number(e.target.value))} 
         />

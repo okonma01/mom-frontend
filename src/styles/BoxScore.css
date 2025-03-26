@@ -1,35 +1,163 @@
 .boxscore {
-  background-color: rgba(245, 247, 250, 0.9);  /* light, frosted look */
-  padding: 1.2rem;
+  background-color: rgba(245, 247, 250, 0.92);
+  padding: 0 1.2rem;
   border-radius: 8px;
   color: #212529;
-  max-height: 400px;
+  max-height: 60vh;
   overflow-y: auto;
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  /* Hide scrollbar but keep functionality */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
-.boxscore h3 {
-  text-align: center;
-  margin-bottom: 1rem;
-  font-size: 1.4rem;
+/* Hide scrollbar for Chrome, Safari and Opera */
+.boxscore::-webkit-scrollbar {
+  display: none;
+}
+
+/* Add horizontal scrolling capability for the table container */
+.team-boxscore {
+  position: relative; /* For positioning context */
+  overflow-x: auto; /* Enable horizontal scrolling */
+  scrollbar-width: none; /* Hide Firefox scrollbar */
+  -ms-overflow-style: none; /* Hide IE/Edge scrollbar */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.team-boxscore::-webkit-scrollbar {
+  display: none;
+}
+
+.team-header {
+  display: flex;
+  align-items: center;
+  margin: 1rem 0 0;
+  padding: 0.5rem 1rem;
+  background-color: rgba(245, 247, 250, 1);
+  border-radius: 4px;
+  position: sticky; /* Make the team header sticky too */
+  top: 0;
+  z-index: 2; /* Higher than table headers */
+}
+
+.team-nickname {
+  font-size: 1.3rem;
+  font-weight: bold;
   color: #212529;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .boxscore table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
+  min-width: 650px; /* Set a minimum width for the table to prevent squishing */
 }
 
 .boxscore th, 
 .boxscore td {
-  border: 1px solid #ced4da;
-  padding: 8px 10px;
   text-align: center;
-  font-size: 1rem;
+  border-bottom: 1px solid #dee2e6;
 }
 
 .boxscore th {
+  padding: 0 4px; /* Increased padding from 8px to 10px */
   background-color: #e9ecef;
+  font-size: 1rem;
   font-weight: bold;
+  position: sticky;
+  top: 42px; /* Height of team header + some padding */
+  z-index: 1;
+}
+.boxscore td {
+  font-size: 0.95rem;
+  padding: 10px 4px; /* Increased padding from 8px to 10px */
+}
+
+thead tr {
+  height: 3rem;
+}
+
+tbody tr {
+  height: 4rem;
+}
+
+.boxscore tr:hover {
+  background-color: rgba(0,123,255,0.05);
+}
+
+.player-col {
+  text-align: left;
+  width: 20%;
+}
+
+.icon-col {
+  width: 40px;
+  padding: 0 !important;
+  text-align: center;
+}
+
+.player-icon {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  object-fit: cover;
+  vertical-align: middle;
+}
+
+/* Remove the old player-info styles since we're not using it anymore */
+.player-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.player-info > span {
+  text-align: left;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .boxscore {
+    padding: 0.8rem;
+  }
+  
+  .team-boxscore {
+    margin: 0 -0.8rem; /* Extend to the edges of the container */
+    padding: 0 0.8rem; /* Add padding back inside for content */
+    width: calc(100% + 1.6rem); /* Compensate for negative margins */
+  }
+  
+  .boxscore th, 
+  .boxscore td {
+    padding: 8px 2px; /* Increased padding from 6px to 8px */
+    font-size: 0.8rem;
+    white-space: nowrap; /* Prevent text wrapping */
+  }
+  
+  .boxscore th {
+    top: 38px; /* Adjust for smaller team header */
+  }
+  
+  .boxscore tr {
+    height: 42px; /* Slightly smaller fixed height for mobile */
+  }
+  
+  .player-col {
+    width: 120px; /* Fixed width instead of percentage */
+    min-width: 120px; /* Ensure minimum width */
+  }
+  
+  .icon-col {
+    width: 40px;
+    min-width: 40px; /* Ensure minimum width */
+  }
+  
+  .player-icon {
+    width: 25px;
+    height: 25px;
+  }
 }

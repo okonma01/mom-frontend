@@ -14,6 +14,7 @@ import BoxScore from "../components/BoxScore";
 import "../styles/GameSimulationPage.css";
 import { getAssetPath } from "../utils/paths";
 import { getTeamColors, getCourtImagePath } from "../utils/teamUtils";
+import Footer from "../components/Footer";
 
 function useScoreState() {
   const [scores, setScores] = useState({ home: 0, away: 0 });
@@ -120,6 +121,11 @@ function GameSimulationPage() {
   const { playerStats, updatePlayerStats } = usePlayerStats();
   const [homeScoreUpdated, setHomeScoreUpdated] = useState(false);
   const [awayScoreUpdated, setAwayScoreUpdated] = useState(false);
+  const [activeTab, setActiveTab] = useState('play-by-play');
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
 
   // Moved currentEvent definition before it's used in the useEffect
   const currentEvent = useMemo(
@@ -329,18 +335,33 @@ function GameSimulationPage() {
         awayScoreUpdated={awayScoreUpdated}
       />
       
-      <div className="upper-section">
-        <button className="toggle-boxscore-btn" onClick={toggleBoxScore}>
-          {displayBoxScore ? "Hide Box Score" : "Show Box Score"}
-        </button>
-        {displayBoxScore && <BoxScore gameInfo={gameData.game_info} playerStats={playerStats} />}
-      </div>
-      
       <div className="lower-section">
-        <BroadcastEventFeed 
-          events={gameData.events.slice(0, currentEventIndex + 1)} 
-          gameInfo={gameData.game_info} 
-        />
+        <div className="tabs">
+          <button 
+            className={`tab ${activeTab === 'play-by-play' ? 'active' : ''}`} 
+            onClick={() => handleTabChange('play-by-play')}
+          >
+            Play-by-Play
+          </button>
+          <button 
+            className={`tab ${activeTab === 'box-score' ? 'active' : ''}`} 
+            onClick={() => handleTabChange('box-score')}
+          >
+            Box Score
+          </button>
+        </div>
+        {activeTab === 'play-by-play' && (
+          <BroadcastEventFeed 
+            events={gameData.events.slice(0, currentEventIndex + 1)} 
+            gameInfo={gameData.game_info} 
+          />
+        )}
+        {activeTab === 'box-score' && (
+          <BoxScore 
+            gameInfo={gameData.game_info}
+            playerStats={playerStats}
+          />
+        )}
         <BroadcastControls 
           isPlaying={isPlaying}
           playbackSpeed={playbackSpeed}
@@ -352,6 +373,7 @@ function GameSimulationPage() {
           onSkipToEnd={handleSkipToEnd}
         />
       </div>
+      <Footer />
     </div>
   );
 }

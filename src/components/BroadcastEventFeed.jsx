@@ -219,11 +219,7 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
   return (
     <div className={`broadcast-feed-container ${isCollapsed ? 'collapsed' : ''}`}>
       <div className="broadcast-header" onClick={toggleCollapse}>
-        <h3>BROADCAST</h3>
-        <div className="live-indicator">
-          <span className="live-dot"></span>
-          LIVE
-        </div>
+        <h3>BROADCAST <span className="live-indicator"><span className="live-dot"></span>LIVE</span></h3>
       </div>
       
       <div className="broadcast-content" ref={feedRef}>

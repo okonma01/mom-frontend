@@ -21,6 +21,16 @@
   font-size: 1rem;
   font-weight: bold;
   transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+}
+
+.control-icon {
+  display: inline-block;
+  font-size: 1.2rem;
+  line-height: 1;
 }
 
 .control-btn:hover {
@@ -43,10 +53,10 @@
   align-items: center;
   color: #212529;
   font-size: 0.9rem;
-  background-color: #f8f9fa;
+  /* background-color: #f8f9fa; */
   padding: 0.5rem 1rem;
   border-radius: 6px;
-  border: 1px solid #dee2e6;
+  /* border: 1px solid #dee2e6; */
 }
 
 .speed-control label {
@@ -55,6 +65,7 @@
 }
 
 .speed-control input[type="range"] {
+  max-width: 100px;
   margin-left: 5px;
   accent-color: #007bff;
 }

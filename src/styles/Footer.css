@@ -1,0 +1,88 @@
+.app-footer {
+  padding: 0.75rem 1rem;
+  background-color: rgba(240, 240, 240, 0.7);
+  border-top: 1px solid #dee2e6;
+  margin-top: auto;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #24292e;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  font-weight: 500;
+}
+
+.github-link:hover {
+  color: #0366d6;
+}
+
+.github-link svg {
+  fill: currentColor;
+}
+
+.github-corner {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 100;
+  opacity: 0.6;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.github-corner:hover {
+  opacity: 1;
+}
+
+.github-svg {
+  fill: #151513;
+  color: #fff;
+  border: 0;
+}
+
+.github-corner .octo-arm {
+  transform-origin: 130px 106px;
+}
+
+.github-corner:hover .octo-arm {
+  animation: octocat-wave 560ms ease-in-out;
+}
+
+@keyframes octocat-wave {
+  0%, 100% { transform: rotate(0) }
+  20%, 60% { transform: rotate(-25deg) }
+  40%, 80% { transform: rotate(10deg) }
+}
+
+@media (max-width: 500px) {
+  .github-corner {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .github-corner:hover .octo-arm {
+    animation: none;
+  }
+  
+  .github-corner .octo-arm {
+    animation: octocat-wave 560ms ease-in-out;
+  }
+}
+
+/* Add page-specific positioning for the GitHub corner */
+.welcome-container .github-corner,
+.team-selection-container .github-corner,
+.game-summary-container .github-corner {
+  position: absolute;
+  top: 0;
+  right: 0;
+}

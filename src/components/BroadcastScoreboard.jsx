@@ -54,9 +54,6 @@ const BroadcastScoreboard = ({ gameInfo, scores, currentTime, teamColors }) => {
           className="team-logo"
         />
         <div className="team-name">{away.team_name}</div>
-        <div className="live-indicator">
-          <span className="live-dot"></span> LIVE
-        </div>
       </div>
     </div>
   );
