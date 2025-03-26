@@ -1,0 +1,332 @@
+{
+  "cavaliers16": {
+    "team_id": "cavaliers16",
+    "team_name": "Cleveland Cavaliers",
+    "abbreviation": "CLE",
+    "season": 2016,
+    "players": {
+      "pMDku": {
+        "player_name": "Matthew Dellavedova",
+        "player_index": 0,
+        "jersey_number": 8
+      },
+      "pFrCh": {
+        "player_name": "Channing Frye",
+        "player_index": 1,
+        "jersey_number": 9
+      },
+      "pk11e": {
+        "player_name": "Kyrie Irving",
+        "player_index": 2,
+        "jersey_number": 2
+      },
+      "p2LB3": {
+        "player_name": "LeBron James",
+        "player_index": 3,
+        "jersey_number": 23
+      },
+      "prj3q": {
+        "player_name": "Richard Jefferson",
+        "player_index": 4,
+        "jersey_number": 24
+      },
+      "pkL5v": {
+        "player_name": "Kevin Love",
+        "player_index": 5,
+        "jersey_number": 0
+      },
+      "pShum": {
+        "player_name": "Iman Shumpert",
+        "player_index": 6,
+        "jersey_number": 4
+      },
+      "pjRs6": {
+        "player_name": "J.R. Smith",
+        "player_index": 7,
+        "jersey_number": 5
+      },
+      "pTT0n": {
+        "player_name": "Tristan Thompson",
+        "player_index": 8,
+        "jersey_number": 13
+      }
+    },
+    "starting_lineup": [
+      "pk11e",
+      "prj3q",
+      "p2LB3",
+      "pkL5v",
+      "pTT0n"
+    ],
+    "coach": "Tyronn Lue",
+    "record": "57-25",
+    "arena": "Quicken Loans Arena",
+    "colors": {
+      "primary": "#860038",
+      "secondary": "#041E42",
+      "accent": "#FDBB30"
+    }
+  },
+  "celtics24": {
+    "team_id": "celtics24",
+    "team_name": "Boston Celtics",
+    "abbreviation": "BOS",
+    "season": 2024,
+    "players": {
+      "plLas": {
+        "player_name": "Jaylen Brown",
+        "player_index": 0,
+        "jersey_number": 7
+      },
+      "pfSYO": {
+        "player_name": "Sam Hauser",
+        "player_index": 1,
+        "jersey_number": 30
+      },
+      "pVUVp": {
+        "player_name": "Jrue Holiday",
+        "player_index": 2,
+        "jersey_number": 4
+      },
+      "pZPan": {
+        "player_name": "Al Horford",
+        "player_index": 3,
+        "jersey_number": 42
+      },
+      "pF9cW": {
+        "player_name": "Kristaps Porziņģis",
+        "player_index": 4,
+        "jersey_number": 8
+      },
+      "p3EB5": {
+        "player_name": "Payton Pritchard",
+        "player_index": 5,
+        "jersey_number": 11
+      },
+      "pC2QE": {
+        "player_name": "Jayson Tatum",
+        "player_index": 6,
+        "jersey_number": 0
+      },
+      "pMSR4": {
+        "player_name": "Xavier Tillman Sr.",
+        "player_index": 7,
+        "jersey_number": 26
+      },
+      "pczmw": {
+        "player_name": "Derrick White",
+        "player_index": 8,
+        "jersey_number": 9
+      }
+    },
+    "starting_lineup": [
+      "pVUVp",
+      "pczmw",
+      "plLas",
+      "pC2QE",
+      "pF9cW"
+    ],
+    "coach": "Joe Mazzulla",
+    "record": "64-18",
+    "arena": "TD Garden",
+    "colors": {
+      "primary": "#007A33",
+      "secondary": "#FFFFFF",
+      "accent": "#BA9653"
+    }
+  },
+  "nuggets23": {
+    "team_id": "nuggets23",
+    "team_name": "Denver Nuggets",
+    "abbreviation": "DEN",
+    "season": 2023,
+    "players": {
+      "pTpV7": {
+        "player_name": "Christian Braun",
+        "player_index": 0,
+        "jersey_number": 0
+      },
+      "pJNmx": {
+        "player_name": "Bruce Brown",
+        "player_index": 1,
+        "jersey_number": 11
+      },
+      "pTYWE": {
+        "player_name": "Kentavious Caldwell-Pope",
+        "player_index": 2,
+        "jersey_number": 5
+      },
+      "p8t0g": {
+        "player_name": "Aaron Gordon",
+        "player_index": 3,
+        "jersey_number": 50
+      },
+      "pn3UR": {
+        "player_name": "Jeff Green",
+        "player_index": 4,
+        "jersey_number": 32
+      },
+      "pJtN2": {
+        "player_name": "Nikola Jokić",
+        "player_index": 5,
+        "jersey_number": 15
+      },
+      "pKvyJ": {
+        "player_name": "Jamal Murray",
+        "player_index": 6,
+        "jersey_number": 27
+      },
+      "pSwFn": {
+        "player_name": "Michael Porter Jr.",
+        "player_index": 7,
+        "jersey_number": 1
+      }
+    },
+    "starting_lineup": [
+      "pKvyJ",
+      "pTYWE",
+      "pSwFn",
+      "p8t0g",
+      "pJtN2"
+    ],
+    "coach": "Michael Malone",
+    "record": "53-29",
+    "arena": "Pepsi Center",
+    "colors": {
+      "primary": "#0E2240",
+      "secondary": "#FEC524",
+      "accent": "#8B2131"
+    }
+  },
+  "raptors19": {
+    "team_id": "raptors19",
+    "team_name": "Toronto Raptors",
+    "abbreviation": "TOR",
+    "players": {
+      "pMg33": {
+        "player_name": "Marc Gasol",
+        "player_index": 0,
+        "jersey_number": 33
+      },
+      "p14dg": {
+        "player_name": "Danny Green",
+        "player_index": 1,
+        "jersey_number": 14
+      },
+      "pibkY": {
+        "player_name": "Serge Ibaka",
+        "player_index": 2,
+        "jersey_number": 9
+      },
+      "pkLa2": {
+        "player_name": "Kawhi Leonard",
+        "player_index": 3,
+        "jersey_number": 2
+      },
+      "pK7yl": {
+        "player_name": "Kyle Lowry",
+        "player_index": 4,
+        "jersey_number": 7
+      },
+      "pN0rm": {
+        "player_name": "Norman Powell",
+        "player_index": 5,
+        "jersey_number": 24
+      },
+      "pSp43": {
+        "player_name": "Pascal Siakam",
+        "player_index": 6,
+        "jersey_number": 43
+      },
+      "pFV2v": {
+        "player_name": "Fred VanVleet",
+        "player_index": 7,
+        "jersey_number": 23
+      }
+    },
+    "starting_lineup": [
+      "pK7yl",
+      "pFV2v",
+      "pkLa2",
+      "pSp43",
+      "pMg33"
+    ],
+    "season": 2019,
+    "coach": "Nick Nurse",
+    "record": "58-24",
+    "arena": "Scotiabank Arena",
+    "colors": {
+      "primary": "#CE1141",
+      "secondary": "#000000",
+      "accent": "#A1A1A4"
+    }
+  },
+  "warriors17": {
+    "team_id": "warriors17",
+    "team_name": "Golden State Warriors",
+    "abbreviation": "GSW",
+    "season": 2017,
+    "players": {
+      "piAn3": {
+        "player_name": "Ian Clark",
+        "player_index": 0,
+        "jersey_number": 21
+      },
+      "pSc30": {
+        "player_name": "Stephen Curry",
+        "player_index": 1,
+        "jersey_number": 30
+      },
+      "pkd3e": {
+        "player_name": "Kevin Durant",
+        "player_index": 2,
+        "jersey_number": 35
+      },
+      "pDpsr": {
+        "player_name": "Draymond Green",
+        "player_index": 3,
+        "jersey_number": 23
+      },
+      "plwie": {
+        "player_name": "Andre Iguodala",
+        "player_index": 4,
+        "jersey_number": 9
+      },
+      "p083h": {
+        "player_name": "Shaun Livingston",
+        "player_index": 5,
+        "jersey_number": 34
+      },
+      "pvw5v": {
+        "player_name": "Zaza Pachulia",
+        "player_index": 6,
+        "jersey_number": 27
+      },
+      "pkt1l": {
+        "player_name": "Klay Thompson",
+        "player_index": 7,
+        "jersey_number": 11
+      },
+      "pg9nr": {
+        "player_name": "David West",
+        "player_index": 8,
+        "jersey_number": 3
+      }
+    },
+    "starting_lineup": [
+      "pSc30",
+      "pkt1l",
+      "pkd3e",
+      "pDpsr",
+      "pvw5v"
+    ],
+    "coach": "Steve Kerr",
+    "record": "67-15",
+    "arena": "Oracle Arena",
+    "colors": {
+      "primary": "#FFC72C",
+      "secondary": "#1D428A",
+      "accent": "#26282A"
+    }
+  }
+}
