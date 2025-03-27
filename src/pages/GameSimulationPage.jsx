@@ -11,10 +11,11 @@ import BroadcastScoreboard from "../components/BroadcastScoreboard";
 import BroadcastEventFeed from "../components/BroadcastEventFeed";
 import BroadcastControls from "../components/BroadcastControls";
 import BoxScore from "../components/BoxScore";
-import "../styles/GameSimulationPage.css";
+import styles from "../styles/GameSimulationPage.module.css";
 import { getAssetPath } from "../utils/paths";
 import { getTeamColors, getCourtImagePath } from "../utils/teamUtils";
 import Footer from "../components/Footer";
+import { cx } from "../utils/moduleUtils";
 
 function useScoreState() {
   const [scores, setScores] = useState({ home: 0, away: 0 });
@@ -33,13 +34,11 @@ function useScoreState() {
   return { scores, updateScores, incrementScore };
 }
 
-// NEW: Hook to track player stats (moved above component)
 function usePlayerStats() {
   const [playerStats, setPlayerStats] = useState({});
   const updatePlayerStats = useCallback((event) => {
     setPlayerStats((prevStats) => {
       const newStats = { ...prevStats };
-      // Helper to update stats for a given player
       const updateStat = (playerId, field, amount = 1) => {
         if (!playerId) return;
         newStats[playerId] = newStats[playerId] || {
@@ -57,7 +56,6 @@ function usePlayerStats() {
         };
         newStats[playerId][field] = (newStats[playerId][field] || 0) + amount;
       };
-      // Process event by type
       switch (event.event_type) {
         case "shot_made":
           updateStat(event.player_id, "points", event.details.points);
@@ -93,7 +91,6 @@ function usePlayerStats() {
             updateStat(event.details.steal_player_id, "steals", 1);
           }
           break;
-        // ...additional cases as needed...
         default:
           break;
       }
@@ -127,13 +124,11 @@ function GameSimulationPage() {
     setActiveTab(tab);
   };
 
-  // Moved currentEvent definition before it's used in the useEffect
   const currentEvent = useMemo(
     () => gameData?.events?.[currentEventIndex] || null,
     [gameData, currentEventIndex]
   );
 
-  // Derive team colors
   const teamColors = useMemo(() => {
     if (!gameData || !gameData.game_info) return [null, null];
     return [
@@ -142,14 +137,12 @@ function GameSimulationPage() {
     ];
   }, [gameData]);
 
-  // Get court image for background
   const courtImagePath = useMemo(() => {
     if (!gameData || !gameData.game_info) return null;
     const homeTeam = gameData.game_info.teams[0];
     return getCourtImagePath(homeTeam.team_name);
   }, [gameData]);
 
-  // Load game data
   useEffect(() => {
     const fetchGame = async () => {
       try {
@@ -172,7 +165,6 @@ function GameSimulationPage() {
     fetchGame();
   }, [gameId]);
 
-  // Modified updateScores with animation
   const updateScoresForEvent = useCallback((event) => {
     if (event.event_type === "shot_made") {
       incrementScore(event.team_id, event.details.points);
@@ -218,11 +210,10 @@ function GameSimulationPage() {
       const event = gameData.events[currentEventIndex];
       setCurrentTime({ quarter: event.quarter, timestamp: event.timestamp });
       updateScoresForEvent(event);
-      updatePlayerStats(event); // NEW: update individual stats from event
+      updatePlayerStats(event);
     }
   }, [currentEventIndex, gameData, updateScoresForEvent, updatePlayerStats]);
 
-  // Skip handlers (unchanged logic)
   const handleSkipToNext = useCallback(() => {
     if (!gameData) return;
     const events = gameData.events;
@@ -289,7 +280,6 @@ function GameSimulationPage() {
     setIsPlaying((prev) => !prev);
   }, []);
 
-  // Log event changes
   useEffect(() => {
     if (
       currentEvent &&
@@ -301,22 +291,21 @@ function GameSimulationPage() {
     }
   }, [currentEvent]);
 
-  // Toggling box score panel
   const toggleBoxScore = useCallback(() => {
     setDisplayBoxScore((prev) => !prev);
   }, []);
 
   if (loading) {
-    return <div className="loading">Loading game data...</div>;
+    return <div className={styles.loading}>Loading game data...</div>;
   }
   if (!gameData) {
     console.error("Game data is null or undefined");
-    return <div className="error">Failed to load game data</div>;
+    return <div className={styles.error}>Failed to load game data</div>;
   }
 
   return (
     <div 
-      className="game-simulation-container"
+      className={styles.game_simulation_container}
       style={{
         backgroundImage: courtImagePath ? `url(${courtImagePath})` : 'none',
         backgroundSize: 'cover',
@@ -335,16 +324,16 @@ function GameSimulationPage() {
         awayScoreUpdated={awayScoreUpdated}
       />
       
-      <div className="lower-section">
-        <div className="tabs">
+      <div className={styles.lower_section}>
+        <div className={styles.tabs}>
           <button 
-            className={`tab ${activeTab === 'play-by-play' ? 'active' : ''}`} 
+            className={cx(styles.tab, activeTab === 'play-by-play' ? styles.active : '')} 
             onClick={() => handleTabChange('play-by-play')}
           >
             Play-by-Play
           </button>
           <button 
-            className={`tab ${activeTab === 'box-score' ? 'active' : ''}`} 
+            className={cx(styles.tab, activeTab === 'box-score' ? styles.active : '')} 
             onClick={() => handleTabChange('box-score')}
           >
             Box Score

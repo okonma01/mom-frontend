@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../styles/TeamSelectionPage.css';
+import styles from '../styles/TeamSelectionPage.module.css';
 import Footer from "../components/Footer";
 import { fetchTeams } from "../utils/api";
 import { getPlayerImagePath } from "../utils/playerUtils";
@@ -89,8 +89,8 @@ function TeamSelectionPage() {
 
   if (loading) {
     return (
-      <div className="team-selection-loading">
-        <div className="loader"></div>
+      <div className={styles.team_selection_loading}>
+        <div className={styles.loader}></div>
         <p>Loading teams...</p>
       </div>
     );
@@ -98,35 +98,35 @@ function TeamSelectionPage() {
 
   if (!homeTeam || !awayTeam) {
     return (
-      <div className="team-selection-error">
+      <div className={styles.team_selection_error}>
         <p>Unable to load teams. Please try again later.</p>
       </div>
     );
   }
 
   return (
-    <div className="team-selection-container" style={getBackgroundStyle()}>
-      <div className="matchup-header">
+    <div className={styles.team_selection_container} style={getBackgroundStyle()}>
+      <div className={styles.matchup_header}>
         <h1>Team Selection</h1>
       </div>
       
-      <div className="court-graphic">
-        <div className="center-circle"></div>
-        <div className="center-line"></div>
+      <div className={styles.court_graphic}>
+        <div className={styles.center_circle}></div>
+        <div className={styles.center_line}></div>
       </div>
       
-      <div className="teams-comparison">
+      <div className={styles.teams_comparison}>
         <div 
-          className="team-card home-team"
+          className={`${styles.team_card} ${styles.home_team}`}
           style={{
             borderColor: homeTeam.colors?.primary || '#333'
           }}
         >
-          <div className="team-card-header" style={{ color: homeTeam.colors?.primary || '#333' }}>
+          <div className={styles.team_card_header} style={{ color: homeTeam.colors?.primary || '#333' }}>
             <h2>HOME</h2>
           </div>
           
-          <div className="team-selector">
+          <div className={styles.team_selector}>
             <select 
               value={homeTeam.id} 
               onChange={handleHomeTeamChange}
@@ -140,12 +140,12 @@ function TeamSelectionPage() {
             </select>
           </div>
 
-          <div className="team-card-content">
-            <div className="team-logo-background">
+          <div className={styles.team_card_content}>
+            <div className={styles.team_logo_background}>
               <img 
                 src={homeTeam.logoUrl} 
                 alt={`${homeTeam.name} logo`} 
-                className="team-logo-bg"
+                className={styles.team_logo_bg}
                 onError={(e) => {
                   e.target.src = "/assets/logos/default.png";
                 }}
@@ -155,16 +155,16 @@ function TeamSelectionPage() {
         </div>
 
         <div 
-          className="team-card away-team"
+          className={`${styles.team_card} ${styles.away_team}`}
           style={{
             borderColor: awayTeam.colors?.primary || '#333'
           }}
         >
-          <div className="team-card-header" style={{ color: awayTeam.colors?.primary || '#333' }}>
+          <div className={styles.team_card_header} style={{ color: awayTeam.colors?.primary || '#333' }}>
             <h2>AWAY</h2>
           </div>
           
-          <div className="team-selector">
+          <div className={styles.team_selector}>
             <select 
               value={awayTeam.id} 
               onChange={handleAwayTeamChange}
@@ -178,12 +178,12 @@ function TeamSelectionPage() {
             </select>
           </div>
 
-          <div className="team-card-content">
-            <div className="team-logo-background">
+          <div className={styles.team_card_content}>
+            <div className={styles.team_logo_background}>
               <img 
                 src={awayTeam.logoUrl} 
                 alt={`${awayTeam.name} logo`} 
-                className="team-logo-bg"
+                className={styles.team_logo_bg}
                 onError={(e) => {
                   e.target.src = "/assets/logos/default.png";
                 }}
@@ -194,7 +194,7 @@ function TeamSelectionPage() {
       </div>
 
       {/* New position-based lineup comparison */}
-      <div className="position-matchups">
+      <div className={styles.position_matchups}>
         {['PG', 'SG', 'SF', 'PF', 'C'].map((position, index) => {
           const homePlayerId = homeTeam.starting_lineup?.[index];
           const awayPlayerId = awayTeam.starting_lineup?.[index];
@@ -202,57 +202,54 @@ function TeamSelectionPage() {
           const awayPlayer = awayTeam.players?.[awayPlayerId];
 
           return (
-            <div className="position-row" key={position}>
-              <div className="player-matchup home-player">
+            <div className={styles.position_row} key={position}>
+              <div className={`${styles.player_matchup} ${styles.home_player}`}>
                 {homePlayer ? (
                   <>
-                    <div className="player-icon-container" style={{ borderColor: homeTeam.colors?.primary || '#333' }}>
+                    <div className={styles.player_details}>
+                      <div className={styles.player_name}>{homePlayer.player_name}</div>
+                      <div className={styles.player_number}>#{homePlayer.jersey_number}</div>
+                    </div>
+                    <div className={styles.player_icon_container} style={{ borderColor: homeTeam.colors?.primary || '#333' }}>
                       <img 
                         src={getPlayerImagePath(homePlayer.player_name, homeTeam.name)}
                         alt={homePlayer.player_name}
-                        className="player-icon"
+                        className={styles.player_icon}
                         onError={(e) => {
                           e.target.src = "/assets/players/default.png";
                         }}
                       />
                     </div>
-                    <div className="player-details">
-                      <div className="player-name">{homePlayer.player_name}</div>
-                      <div className="player-number">#{homePlayer.jersey_number}</div>
-                    </div>
                   </>
                 ) : (
-                  <div className="empty-player">No Player</div>
+                  <div className={styles.empty_player}>No Player</div>
                 )}
               </div>
               
-              <div className="position-indicator" style={{ 
-                backgroundColor: '#495057', // Neutral dark gray color instead of team colors
-                color: '#fff'
-              }}>
+              <div className={styles.position_indicator}>
                 {position}
               </div>
               
-              <div className="player-matchup away-player">
+              <div className={`${styles.player_matchup} ${styles.away_player}`}>
                 {awayPlayer ? (
                   <>
-                    <div className="player-details text-right">
-                      <div className="player-name">{awayPlayer.player_name}</div>
-                      <div className="player-number">#{awayPlayer.jersey_number}</div>
-                    </div>
-                    <div className="player-icon-container" style={{ borderColor: awayTeam.colors?.primary || '#333' }}>
+                    <div className={styles.player_icon_container} style={{ borderColor: awayTeam.colors?.primary || '#333' }}>
                       <img 
                         src={getPlayerImagePath(awayPlayer.player_name, awayTeam.name)}
                         alt={awayPlayer.player_name}
-                        className="player-icon"
+                        className={styles.player_icon}
                         onError={(e) => {
                           e.target.src = "/assets/players/default.png";
                         }}
                       />
                     </div>
+                    <div className={`${styles.player_details} ${styles.text_right}`}>
+                      <div className={styles.player_name}>{awayPlayer.player_name}</div>
+                      <div className={styles.player_number}>#{awayPlayer.jersey_number}</div>
+                    </div>
                   </>
                 ) : (
-                  <div className="empty-player">No Player</div>
+                  <div className={styles.empty_player}>No Player</div>
                 )}
               </div>
             </div>
@@ -260,24 +257,24 @@ function TeamSelectionPage() {
         })}
       </div>
 
-      <div className="simulation-options">
-        <div className="sim-buttons">
+      <div className={styles.simulation_options}>
+        <div className={styles.sim_buttons}>
           <button 
-            className="sim-button quick-sim"
+            className={`${styles.sim_button} ${styles.quick_sim}`}
             onClick={() => handleStartSimulation('quick')}
             style={getButtonStyle(awayTeam)}
           >
             Quick Simulation
-            <span className="button-desc">Skip to final results</span>
+            <span className={styles.button_desc}>Skip to final results</span>
           </button>
           
           <button 
-            className="sim-button full-sim"
+            className={`${styles.sim_button} ${styles.full_sim}`}
             onClick={() => handleStartSimulation('full')}
             style={getButtonStyle(homeTeam)}
           >
             Full Simulation
-            <span className="button-desc">Watch play-by-play action</span>
+            <span className={styles.button_desc}>Watch play-by-play action</span>
           </button>
         </div>
       </div>

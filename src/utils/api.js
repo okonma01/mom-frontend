@@ -18,6 +18,8 @@ export const fetchTeams = async () => {
         .map(([playerId, player]) => ({
           id: playerId,
           name: player.player_name,
+          firstName: player.player_name.split(' ')[0],
+          lastName: player.player_name.replace(player.player_name.split(' ')[0] + ' ', ''),
           number: player.jersey_number
         }));
       

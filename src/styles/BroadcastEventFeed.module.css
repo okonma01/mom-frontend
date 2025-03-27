@@ -1,4 +1,4 @@
-.broadcast-feed-container {
+.broadcast_feed_container {
   background-color: #fefefe;
   border: 1px solid #dee2e6;
   border-radius: 12px;
@@ -10,7 +10,7 @@
   flex-direction: column;
 }
 
-.broadcast-header {
+.broadcast_header {
   flex-shrink: 0; /* Prevent header from shrinking */
   display: flex;
   justify-content: space-between;
@@ -21,7 +21,7 @@
   cursor: pointer;
 }
 
-.broadcast-header h3 {
+.broadcast_header h3 {
   margin: 0;
   font-size: 1.2rem;
   display: flex;
@@ -31,30 +31,32 @@
   color: #212529;
 }
 
-.broadcast-content {
+.broadcast_content {
   flex-grow: 1;
   overflow: hidden; /* Hide overflow */
 }
 
-.broadcast-events {
+.broadcast_events {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   overflow-y: auto; /* Enable vertical scrolling */
   max-height: 40vh; /* Set maximum height */
   padding-right: 10px; /* Give space for scrollbar */
-  
-  /* Hide scrollbar for Chrome, Safari and Opera */
-  &::-webkit-scrollbar {
-    display: none;
-  }
-  
-  /* Hide scrollbar for IE, Edge and Firefox */
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.broadcast_events::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.broadcast_events {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
 
-.broadcast-event {
+.broadcast_event {
   background-color: #ffffff;
   border-radius: 8px;
   padding: 0.75rem 1rem;
@@ -69,15 +71,14 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-.player-icon {
+.player_icon {
   width: 45px;
   height: 45px;
   border-radius: 50%;
   object-fit: cover;
-  /* border: 2px solid #dee2e6; */
 }
 
-.event-time {
+.event_time {
   width: 70px;
   font-size: 1rem;
   color: #495057;
@@ -85,7 +86,7 @@
   flex-shrink: 0;
 }
 
-.event-icon {
+.event_icon {
   width: 24px;
   height: 24px;
   text-align: center;
@@ -93,11 +94,9 @@
   font-size: 1.2rem;
 }
 
-.event-team {
+.event_team {
   font-weight: bold;
-  /* padding: 4px 8px; */
   border-radius: 6px;
-  /* margin-right: 12px; */
   font-size: 0.9rem;
   width: 50px;
   text-align: center;
@@ -105,7 +104,7 @@
   text-transform: uppercase;
 }
 
-.event-description {
+.event_description {
   flex-grow: 1;
   line-height: 1.5;
   font-size: 1.15rem;
@@ -117,7 +116,7 @@
   100% { background-color: transparent; }
 }
 
-.event-period {
+.event_period {
   text-align: center;
   font-weight: bold;
   background: linear-gradient(to right, #f8f9fa, #e9ecef, #f8f9fa);
@@ -131,7 +130,7 @@
   border-bottom: 2px solid #dee2e6;
 }
 
-.player-name {
+.player_name {
   font-weight: bold;
   color: #212529;
 }
@@ -142,30 +141,30 @@
   font-style: italic;
 }
 
-.period-marker {
+.period_marker {
   font-weight: bold;
   color: #007bff;
   font-size: 1.2em;
 }
 
 @media (max-width: 768px) {
-  .broadcast-event {
+  .broadcast_event {
     font-size: 0.9rem;
     padding: 10px;
   }
   
-  .event-time {
+  .event_time {
     width: 60px;
     font-size: 0.8rem;
   }
   
-  .player-icon {
+  .player_icon {
     width: 30px;
     height: 30px;
   }
 }
 
-.live-indicator {
+.live_indicator {
   font-size: 0.8rem;
   display: inline-flex;
   align-items: center;
@@ -177,7 +176,7 @@
   margin-left: 0.3rem;
 }
 
-.live-dot {
+.live_dot {
   width: 8px;
   height: 8px;
   background-color: #dc3545;
@@ -194,12 +193,6 @@
 }
 
 /* Collapsed state */
-.broadcast-feed-container.collapsed .broadcast-content {
+.collapsed .broadcast_content {
   display: none;
-}
-
-.broadcast-feed-container .live-indicator {
-  position: static;
-  bottom: auto;
-  right: auto;
 }

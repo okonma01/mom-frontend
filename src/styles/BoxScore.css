@@ -54,7 +54,7 @@
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
-  min-width: 650px; /* Set a minimum width for the table to prevent squishing */
+  min-width: 600px; /* Set a minimum width for the table to prevent squishing */
 }
 
 .boxscore th, 

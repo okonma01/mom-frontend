@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { getAssetPath } from '../utils/paths';
-import '../styles/BroadcastEventFeed.css';
+// import '../styles/BroadcastEventFeed.css';
+import styles from '../styles/BroadcastEventFeed.module.css';
 
 const getPlayerImagePath = (playerId, gameInfo) => {
   // Find the player in game info to get their name and team
@@ -90,35 +90,35 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
       case 'shot_made':
         if (event.details.shot_type === 'fga_threepoint') {
           return (
-            <span className="event-highlight">
-              <span className="player-name">{playerName}</span> knocks down a three pointer!
+            <span className={styles.event_description}>
+              <span className={styles.player_name}>{playerName}</span> knocks down a three pointer!
               {event.details.assist_player_id && 
-                <span className="assist"> (Assist: {getPlayerName(event.details.assist_player_id)})</span>}
+                <span className={styles.assist}> (Assist: {getPlayerName(event.details.assist_player_id)})</span>}
             </span>
           );
         } else if (event.details.points === 2) {
           const isInside = event.details.shot_type === 'fga_inside';
           return (
             <span>
-              <span className="player-name">{playerName}</span> 
+              <span className={styles.player_name}>{playerName}</span> 
               {isInside ? ' scores in the paint' : ' hits the jumper'}
               {event.details.assist_player_id && 
-                <span className="assist"> (Assist: {getPlayerName(event.details.assist_player_id)})</span>}
+                <span className={styles.assist}> (Assist: {getPlayerName(event.details.assist_player_id)})</span>}
             </span>
           );
         }
         return (
           <span>
-            <span className="player-name">{playerName}</span> scores
+            <span className={styles.player_name}>{playerName}</span> scores
             {event.details.assist_player_id && 
-              <span className="assist"> (Assist: {getPlayerName(event.details.assist_player_id)})</span>}
+              <span className={styles.assist}> (Assist: {getPlayerName(event.details.assist_player_id)})</span>}
           </span>
         );
       
       case 'shot_missed':
         return (
           <span>
-            <span className="player-name">{playerName}</span> misses 
+            <span className={styles.player_name}>{playerName}</span> misses 
             {event.details.shot_type === 'fga_threepoint' ? ' the three-point attempt' : ' the shot'}
           </span>
         );
@@ -126,7 +126,7 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
       case 'free_throw':
         return (
           <span>
-            <span className="player-name">{playerName}</span> 
+            <span className={styles.player_name}>{playerName}</span> 
             {event.details.made ? ' makes' : ' misses'} free throw {event.details.free_throw_num} of {event.details.total_free_throws}
           </span>
         );
@@ -135,7 +135,7 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
         const reboundType = event.details.rebound_type === 'offensive' ? 'offensive' : 'defensive';
         return (
           <span>
-            <span className="player-name">{playerName}</span> grabs the {reboundType} rebound
+            <span className={styles.player_name}>{playerName}</span> grabs the {reboundType} rebound
           </span>
         );
       
@@ -143,16 +143,16 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
         if (event.details.steal_player_id) {
           return (
             <span>
-              <span className="player-name">{playerName}</span> turns it over, 
-              stolen by <span className="player-name">{getPlayerName(event.details.steal_player_id)}</span>
+              <span className={styles.player_name}>{playerName}</span> turns it over, 
+              stolen by <span className={styles.player_name}>{getPlayerName(event.details.steal_player_id)}</span>
             </span>
           );
         }
-        return <span><span className="player-name">{playerName}</span> turnover</span>;
+        return <span><span className={styles.player_name}>{playerName}</span> turnover</span>;
       
       case 'quarter_end':
         return (
-          <span className="period-marker">
+          <span className={styles.period_marker}>
             End of Quarter {event.details.quarter}
           </span>
         );
@@ -164,19 +164,19 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
         const losingScore = Math.min(event.details.home_score, event.details.away_score);
         
         return (
-          <span className="period-marker">
+          <span className={styles.period_marker}>
             GAME OVER - {winningTeam.name} wins {winningScore}-{losingScore}
           </span>
         );
       
       case 'tip_off':
-        return <span><span className="player-name">{playerName}</span> wins the tip-off</span>;
+        return <span><span className={styles.player_name}>{playerName}</span> wins the tip-off</span>;
       
       case 'substitution':
         return (
           <span>
-            <span className="player-name">{getPlayerName(event.details.player_in_id)}</span> checks in for 
-            <span className="player-name"> {getPlayerName(event.details.player_out_id)}</span>
+            <span className={styles.player_name}>{getPlayerName(event.details.player_in_id)}</span> checks in for 
+            <span className={styles.player_name}> {getPlayerName(event.details.player_out_id)}</span>
           </span>
         );
         
@@ -186,22 +186,18 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
   };
 
   const getEventClassNames = (event, index) => {
-    let classNames = 'broadcast-event';
-    
-    // if (highlightedEvent === index) {
-    //   classNames += ' event-highlight-animation';
-    // }
+    let classNames = styles.broadcast_event;
     
     if (event.event_type === 'quarter_end' || event.event_type === 'game_over') {
-      classNames += ' event-period';
+      classNames += ' event_period';
     } else if (event.event_type === 'shot_made') {
-      classNames += ' event-score';
+      classNames += ' event_score';
       
       if (event.details.shot_type === 'fga_threepoint') {
-        classNames += ' event-three';
+        classNames += ' event_three';
       }
     } else if (event.event_type === 'turnover' && event.details.steal_player_id) {
-      classNames += ' event-steal';
+      classNames += ' event_steal';
     }
     
     return classNames;
@@ -217,13 +213,13 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
   };
 
   return (
-    <div className={`broadcast-feed-container ${isCollapsed ? 'collapsed' : ''}`}>
-      <div className="broadcast-header" onClick={toggleCollapse}>
-        <h3>BROADCAST <span className="live-indicator"><span className="live-dot"></span>LIVE</span></h3>
+    <div className={`${styles.broadcast_feed_container} ${isCollapsed ? 'collapsed' : ''}`}>
+      <div className={styles.broadcast_header} onClick={toggleCollapse}>
+        <h3>BROADCAST <span className={styles.live_indicator}><span className={styles.live_dot}></span>LIVE</span></h3>
       </div>
       
-      <div className="broadcast-content" ref={feedRef}>
-        <div className="broadcast-events">
+      <div className={styles.broadcast_content} ref={feedRef}>
+        <div className={styles.broadcast_events}>
           {events.slice().reverse().map((event, index) => {
             let playerId = event.player_id;
             let teamShortName = getTeamInfo(event.team_id).shortName;
@@ -242,20 +238,20 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
                 <img 
                   src={getPlayerImagePath(playerId, gameInfo)} 
                   alt="Player" 
-                  className="player-icon"
+                  className={styles.player_icon}
                   onError={(e) => {
                     e.target.onerror = null; 
                     e.target.src = `/assets/player icons/${event.teams[event.team_id].team_name.split(' ').pop().toLowerCase()}/default.png`;
                   }} 
                 />
               )}
-              <div className="event-time">
+              <div className={styles.event_time}>
                 {event.quarter}Q {event.timestamp}
               </div>
-              <div className="event-team">
+              <div className={styles.event_team}>
                 {teamShortName}
               </div>
-              <div className="event-description">
+              <div className={styles.event_description}>
                 {formatEventDescription(event)}
               </div>
             </div>

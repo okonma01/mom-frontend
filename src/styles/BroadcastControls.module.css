@@ -1,4 +1,4 @@
-.broadcast-controls-panel {
+.broadcast_controls_panel {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -11,7 +11,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.control-btn {
+.control_btn {
   background-color: #007bff;
   color: white;
   border: none;
@@ -27,57 +27,55 @@
   min-width: 3rem;
 }
 
-.control-icon {
+.control_icon {
   display: inline-block;
   font-size: 1.2rem;
   line-height: 1;
 }
 
-.control-btn:hover {
+.control_btn:hover {
   background-color: #0069d9;
   transform: translateY(-2px);
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.control-btn:active {
+.control_btn:active {
   transform: translateY(0);
 }
 
-.play-btn {
+.play_btn {
   padding: 0.7rem 1.5rem;
   font-size: 1.1rem;
 }
 
-.speed-control {
+.speed_control {
   display: flex;
   align-items: center;
   color: #212529;
   font-size: 0.9rem;
-  /* background-color: #f8f9fa; */
   padding: 0.5rem 1rem;
   border-radius: 6px;
-  /* border: 1px solid #dee2e6; */
 }
 
-.speed-control label {
+.speed_control label {
   margin-right: 0.8rem;
   font-weight: bold;
 }
 
-.speed-control input[type="range"] {
+.speed_control input[type="range"] {
   max-width: 100px;
   margin-left: 5px;
   accent-color: #007bff;
 }
 
 @media (max-width: 768px) {
-  .broadcast-controls-panel {
+  .broadcast_controls_panel {
     flex-wrap: wrap;
     gap: 0.5rem;
     padding: 0.8rem;
   }
   
-  .control-btn {
+  .control_btn {
     padding: 0.5rem 0.8rem;
     font-size: 0.9rem;
   }

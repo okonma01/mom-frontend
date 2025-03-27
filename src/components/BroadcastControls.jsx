@@ -1,5 +1,5 @@
 import React from "react";
-import "../styles/BroadcastControls.css";
+import styles from "../styles/BroadcastControls.module.css";
 
 const BroadcastControls = ({ 
   isPlaying, 
@@ -12,15 +12,15 @@ const BroadcastControls = ({
   onSkipToEnd 
 }) => {
   return (
-    <div className="broadcast-controls-panel">
-      <button onClick={onSkipToStart} className="control-btn">|&lt;</button>
-      <button onClick={onSkipToPrevious} className="control-btn">&lt;&lt;</button>
-      <button onClick={onPlayPause} className="control-btn">
+    <div className={styles.broadcast_controls_panel}>
+      <button onClick={onSkipToStart} className={styles.control_btn}>|&lt;</button>
+      <button onClick={onSkipToPrevious} className={styles.control_btn}>&lt;&lt;</button>
+      <button onClick={onPlayPause} className={styles.control_btn}>
         {isPlaying ? "Pause" : "Play"}
       </button>
-      <button onClick={onSkipToNext} className="control-btn">&gt;&gt;</button>
-      <button onClick={onSkipToEnd} className="control-btn">&gt;|</button>
-      <div className="speed-control">
+      <button onClick={onSkipToNext} className={styles.control_btn}>&gt;&gt;</button>
+      <button onClick={onSkipToEnd} className={styles.control_btn}>&gt;|</button>
+      <div className={styles.speed_control}>
         <label>Speed:</label>
         <input 
           type="range" 
