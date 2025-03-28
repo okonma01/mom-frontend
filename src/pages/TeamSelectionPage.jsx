@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from '../styles/TeamSelectionPage.module.css';
 import Footer from "../components/Footer";
 import { fetchTeams } from "../utils/api";
-import { getPlayerImagePath } from "../utils/playerUtils";
+import { getPlayerImagePath, getPlayerFirstName, getPlayerLastName } from "../utils/playerUtils";
 
 function TeamSelectionPage() {
   const [availableTeams, setAvailableTeams] = useState([]);
@@ -207,8 +207,9 @@ function TeamSelectionPage() {
                 {homePlayer ? (
                   <>
                     <div className={styles.player_details}>
-                      <div className={styles.player_name}>{homePlayer.player_name}</div>
-                      <div className={styles.player_number}>#{homePlayer.jersey_number}</div>
+                      <div className={styles.player_name}>{getPlayerFirstName(homePlayer.player_name)}</div>
+                      <div className={`${styles.player_name} ${styles.player_last_name}`}>{getPlayerLastName(homePlayer.player_name)}</div>
+                      {/* <div className={styles.player_number}>#{homePlayer.jersey_number}</div> */}
                     </div>
                     <div className={styles.player_icon_container} style={{ borderColor: homeTeam.colors?.primary || '#333' }}>
                       <img 
@@ -243,9 +244,10 @@ function TeamSelectionPage() {
                         }}
                       />
                     </div>
-                    <div className={`${styles.player_details} ${styles.text_right}`}>
-                      <div className={styles.player_name}>{awayPlayer.player_name}</div>
-                      <div className={styles.player_number}>#{awayPlayer.jersey_number}</div>
+                    <div className={`${styles.player_details}`}>
+                      <div className={styles.player_name}>{getPlayerFirstName(awayPlayer.player_name)}</div>
+                      <div className={`${styles.player_name} ${styles.player_last_name}`}>{getPlayerLastName(awayPlayer.player_name)}</div>
+                      {/* <div className={styles.player_number}>#{awayPlayer.jersey_number}</div> */}
                     </div>
                   </>
                 ) : (

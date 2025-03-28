@@ -156,10 +156,9 @@
   background: rgba(255, 255, 255, 0.9);
   border-radius: 8px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
   position: relative;
   z-index: 1;
-  max-height: calc(100vh - 350px);
+  max-height: 40vh; /* Fixed height that won't take over the viewport */
   overflow-y: auto;
   
   /* Hide scrollbar but keep functionality */
@@ -227,29 +226,45 @@
 .player_icon {
   width: 100%;
   height: 100%;
-  border-radius: 10%;
+  object-fit: cover;
 }
 
 .player_details {
   display: flex;
   font-size: 1.3rem;
-  text-align: right;
   flex-direction: column;
   margin: 0 0.75rem;
-  width: 180px;
+  /* width: 180px; */
 }
 
-.text_right {
+.home_player .player_details {
   text-align: right;
+  margin-right: 1rem;
 }
+
+.away_player .player_details {
+  text-align: left;
+  margin-left: 1rem;
+}
+
 
 .player_name {
-  font-weight: 600;
-  font-size: 0.9rem;
+  font-weight: 400;
+  font-size: 0.8rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #4a4a4a;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.player_last_name {
+  font-weight: 700;
+  font-size: 1rem;
   color: #212529;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .player_number {
@@ -376,7 +391,7 @@
   }
   
   .position_row {
-    flex-direction: column;
+    /* flex-direction: column; */
     padding: 1rem 0;
     min-height: auto;
   }
@@ -407,7 +422,7 @@
 
 @media (max-width: 480px) {
   .team_card_content {
-    flex-direction: column;
+    /* flex-direction: column; */
     align-items: center;
   }
   
