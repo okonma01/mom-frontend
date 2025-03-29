@@ -1,6 +1,6 @@
 .boxscore {
-  background-color: rgba(245, 247, 250, 0.92);
-  padding: 0 1.2rem;
+  background-color: rgba(255, 255, 255, 0.7);
+  /* padding: 0 1.2rem; */
   border-radius: 8px;
   color: #212529;
   max-height: 60vh;
