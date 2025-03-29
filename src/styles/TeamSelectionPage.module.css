@@ -108,6 +108,27 @@
   border-radius: 0 0 8px 8px;
 }
 
+.team_logo_button {
+  cursor: pointer;
+  width: 120px;
+  height: 120px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.team_logo_button:hover {
+  transform: scale(1.05);
+}
+
+.team_logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .team_logo_background {
   position: absolute;
   top: 0;
@@ -121,16 +142,11 @@
   align-items: center;
 }
 
-.team_logo_bg {
-  width: 80%;
-  height: auto;
-  object-fit: contain;
-  filter: grayscale(30%);
-}
-
 /* Team dropdown selectors */
 .team_selector {
-  padding: 0.5rem 0.75rem 0;
+  padding: 0.5rem 0.75rem;
+  width: 100%;
+  z-index: 10;
 }
 
 .team_selector select {
@@ -158,7 +174,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 1;
-  max-height: 40vh; /* Fixed height that won't take over the viewport */
+  max-height: 50vh; /* Fixed height that won't take over the viewport */
   overflow-y: auto;
   
   /* Hide scrollbar but keep functionality */
@@ -214,8 +230,8 @@
 }
 
 .player_icon_container {
-  width: 55px;
-  height: 55px;
+  width: 50px;
+  height: 50px;
   border-radius: 10%;
   overflow: hidden;
   display: flex;
@@ -418,6 +434,11 @@
   .text_right {
     text-align: center;
   }
+  
+  .team_logo_button {
+    width: 100px;
+    height: 100px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -428,5 +449,10 @@
   
   .sim_button {
     width: 100%;
+  }
+  
+  .team_logo_button {
+    width: 80px;
+    height: 80px;
   }
 }

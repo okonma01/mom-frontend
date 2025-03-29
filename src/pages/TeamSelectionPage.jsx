@@ -10,6 +10,7 @@ function TeamSelectionPage() {
   const [homeTeam, setHomeTeam] = useState(null);
   const [awayTeam, setAwayTeam] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeDropdown, setActiveDropdown] = useState(null); // 'home', 'away', or null
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -20,7 +21,6 @@ function TeamSelectionPage() {
         setAvailableTeams(teamsData);
         
         if (teamsData.length >= 2) {
-          // Find appropriate default teams (using celtics24 and nuggets23 if available)
           const celtics = teamsData.find(t => t.id === 'celtics24') || teamsData[0];
           const nuggets = teamsData.find(t => t.id === 'nuggets23') || 
                           (teamsData.length > 1 ? teamsData[1] : teamsData[0]);
@@ -42,21 +42,29 @@ function TeamSelectionPage() {
     const teamId = e.target.value;
     const selected = availableTeams.find(team => team.id === teamId);
     setHomeTeam(selected);
+    setActiveDropdown(null); // Hide dropdown after selection
   };
 
   const handleAwayTeamChange = (e) => {
     const teamId = e.target.value;
     const selected = availableTeams.find(team => team.id === teamId);
     setAwayTeam(selected);
+    setActiveDropdown(null); // Hide dropdown after selection
+  };
+
+  const toggleDropdown = (team) => {
+    if (activeDropdown === team) {
+      setActiveDropdown(null);
+    } else {
+      setActiveDropdown(team);
+    }
   };
 
   const handleStartSimulation = (mode) => {
     if (!homeTeam || !awayTeam) return;
     
-    // Create a game ID (in a real app this might come from the backend)
     const gameId = "gkRPr"; // Placeholder - would be generated
     
-    // Store simulation parameters
     localStorage.setItem('simulationMode', mode);
     localStorage.setItem('homeTeamId', homeTeam.id);
     localStorage.setItem('awayTeamId', awayTeam.id);
@@ -68,16 +76,14 @@ function TeamSelectionPage() {
     }
   };
 
-  // Get background style based on selected teams
   const getBackgroundStyle = () => {
     if (!homeTeam || !awayTeam) return {};
     
     return {
-      backgroundColor: '#f8f9fa'  // Simple solid color instead of gradient
+      backgroundColor: '#f8f9fa'
     };
   };
 
-  // Get button style based on team color
   const getButtonStyle = (team) => {
     if (!team) return {};
     
@@ -126,31 +132,36 @@ function TeamSelectionPage() {
             <h2>HOME</h2>
           </div>
           
-          <div className={styles.team_selector}>
-            <select 
-              value={homeTeam.id} 
-              onChange={handleHomeTeamChange}
-              style={{ borderColor: homeTeam.colors?.primary || '#333' }}
-            >
-              {availableTeams.map(team => (
-                <option key={`home-${team.id}`} value={team.id}>
-                  {team.name} ({team.season})
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div className={styles.team_card_content}>
-            <div className={styles.team_logo_background}>
+            <div 
+              className={styles.team_logo_button} 
+              onClick={() => toggleDropdown('home')}
+            >
               <img 
                 src={homeTeam.logoUrl} 
                 alt={`${homeTeam.name} logo`} 
-                className={styles.team_logo_bg}
+                className={styles.team_logo}
                 onError={(e) => {
                   e.target.src = "/assets/logos/default.png";
                 }}
               />
             </div>
+            
+            {activeDropdown === 'home' && (
+              <div className={styles.team_selector}>
+                <select 
+                  value={homeTeam.id} 
+                  onChange={handleHomeTeamChange}
+                  style={{ borderColor: homeTeam.colors?.primary || '#333' }}
+                >
+                  {availableTeams.map(team => (
+                    <option key={`home-${team.id}`} value={team.id}>
+                      {team.name} ({team.season})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
 
@@ -164,36 +175,40 @@ function TeamSelectionPage() {
             <h2>AWAY</h2>
           </div>
           
-          <div className={styles.team_selector}>
-            <select 
-              value={awayTeam.id} 
-              onChange={handleAwayTeamChange}
-              style={{ borderColor: awayTeam.colors?.primary || '#333' }}
-            >
-              {availableTeams.map(team => (
-                <option key={`away-${team.id}`} value={team.id}>
-                  {team.name} ({team.season})
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div className={styles.team_card_content}>
-            <div className={styles.team_logo_background}>
+            <div 
+              className={styles.team_logo_button} 
+              onClick={() => toggleDropdown('away')}
+            >
               <img 
                 src={awayTeam.logoUrl} 
                 alt={`${awayTeam.name} logo`} 
-                className={styles.team_logo_bg}
+                className={styles.team_logo}
                 onError={(e) => {
                   e.target.src = "/assets/logos/default.png";
                 }}
               />
             </div>
+            
+            {activeDropdown === 'away' && (
+              <div className={styles.team_selector}>
+                <select 
+                  value={awayTeam.id} 
+                  onChange={handleAwayTeamChange}
+                  style={{ borderColor: awayTeam.colors?.primary || '#333' }}
+                >
+                  {availableTeams.map(team => (
+                    <option key={`away-${team.id}`} value={team.id}>
+                      {team.name} ({team.season})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* New position-based lineup comparison */}
       <div className={styles.position_matchups}>
         {['PG', 'SG', 'SF', 'PF', 'C'].map((position, index) => {
           const homePlayerId = homeTeam.starting_lineup?.[index];
@@ -209,7 +224,6 @@ function TeamSelectionPage() {
                     <div className={styles.player_details}>
                       <div className={styles.player_name}>{getPlayerFirstName(homePlayer.player_name)}</div>
                       <div className={`${styles.player_name} ${styles.player_last_name}`}>{getPlayerLastName(homePlayer.player_name)}</div>
-                      {/* <div className={styles.player_number}>#{homePlayer.jersey_number}</div> */}
                     </div>
                     <div className={styles.player_icon_container} style={{ borderColor: homeTeam.colors?.primary || '#333' }}>
                       <img 
@@ -247,7 +261,6 @@ function TeamSelectionPage() {
                     <div className={`${styles.player_details}`}>
                       <div className={styles.player_name}>{getPlayerFirstName(awayPlayer.player_name)}</div>
                       <div className={`${styles.player_name} ${styles.player_last_name}`}>{getPlayerLastName(awayPlayer.player_name)}</div>
-                      {/* <div className={styles.player_number}>#{awayPlayer.jersey_number}</div> */}
                     </div>
                   </>
                 ) : (
