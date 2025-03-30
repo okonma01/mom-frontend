@@ -6,6 +6,7 @@
       {
         "team_id": 0,
         "team_name": "Boston Celtics",
+        "abbreviation": "BOS",
         "players": [
           {
             "player_id": "plLas",
@@ -68,6 +69,7 @@
       {
         "team_id": 1,
         "team_name": "Denver Nuggets",
+        "abbreviation": "DEN",
         "players": [
           {
             "player_id": "pTpV7",

@@ -17,6 +17,7 @@ import { getTeamColors, getCourtImagePath } from "../utils/teamUtils";
 import Footer from "../components/Footer";
 import { cx } from "../utils/moduleUtils";
 
+// Extracted score state hook
 function useScoreState() {
   const [scores, setScores] = useState({ home: 0, away: 0 });
 
@@ -34,49 +35,64 @@ function useScoreState() {
   return { scores, updateScores, incrementScore };
 }
 
+// Extracted player stats hook
 function usePlayerStats() {
   const [playerStats, setPlayerStats] = useState({});
+
   const updatePlayerStats = useCallback((playerStates, gameData) => {
-    const stats = {};
-    
-    gameData.game_info.teams.forEach((team, teamIndex) => {
-      team.players.forEach((player) => {
-        const playerId = player.player_id || `p${player.player_index}`;
-        
-        if (playerStates[playerId]) {
-          stats[playerId] = {
-            ...playerStates[playerId],
-            team_id: teamIndex,
-            name: player.player_name || `Player ${playerId}`,
-            // Use the correct abbreviated field names from the game_gKiL4.json schema
-            points: playerStates[playerId].pts || 0,
-            rebounds: 
-              (playerStates[playerId].orb || 0) +
-              (playerStates[playerId].drb || 0),
-            assists: playerStates[playerId].ast || 0,
-            steals: playerStates[playerId].stl || 0,
-            turnovers: playerStates[playerId].tov || 0,
-            fieldGoalMade: playerStates[playerId].fg || 0,
-            fieldGoalAttempted: playerStates[playerId].fga || 0,
-            threePointMade: playerStates[playerId].fg_threepoint || 0,
-            threePointAttempted: playerStates[playerId].fga_threepoint || 0,
-            freeThrowsMade: playerStates[playerId].ft || 0,
-            freeThrowsAttempted: playerStates[playerId].fta || 0,
-            minutes: Math.round(playerStates[playerId].mp / 60) || 0,
-            blocks: playerStates[playerId].blk || 0,
-            fouls: playerStates[playerId].pf || 0,
-            offensive_rebounds: playerStates[playerId].orb || 0,
-            defensive_rebounds: playerStates[playerId].drb || 0,
-          };
-        }
+    if (!playerStates || !gameData?.game_info?.teams) return;
+
+    setPlayerStats((prevStats) => {
+      const stats = {};
+
+      gameData.game_info.teams.forEach((team, teamIndex) => {
+        team.players.forEach((player) => {
+          const playerId = player.player_id || `p${player.player_index}`;
+
+          if (playerStates[playerId]) {
+            stats[playerId] = {
+              ...playerStates[playerId],
+              team_id: teamIndex,
+              name: player.player_name || `Player ${playerId}`,
+              points: playerStates[playerId].pts || 0,
+              rebounds:
+                (playerStates[playerId].orb || 0) +
+                (playerStates[playerId].drb || 0),
+              assists: playerStates[playerId].ast || 0,
+              steals: playerStates[playerId].stl || 0,
+              turnovers: playerStates[playerId].tov || 0,
+              fieldGoalMade: playerStates[playerId].fg || 0,
+              fieldGoalAttempted: playerStates[playerId].fga || 0,
+              threePointMade: playerStates[playerId].fg_threepoint || 0,
+              threePointAttempted: playerStates[playerId].fga_threepoint || 0,
+              freeThrowsMade: playerStates[playerId].ft || 0,
+              freeThrowsAttempted: playerStates[playerId].fta || 0,
+              minutes: Math.round(playerStates[playerId].mp / 60) || 0,
+              blocks: playerStates[playerId].blk || 0,
+              fouls: playerStates[playerId].pf || 0,
+              offensive_rebounds: playerStates[playerId].orb || 0,
+              defensive_rebounds: playerStates[playerId].drb || 0,
+            };
+          }
+        });
       });
+
+      // Only update state if something actually changed
+      if (JSON.stringify(stats) !== JSON.stringify(prevStats)) {
+        return stats;
+      }
+      return prevStats;
     });
-    
-    setPlayerStats(stats);
   }, []);
-  
+
   return { playerStats, updatePlayerStats };
 }
+
+// Memoized event feed component
+const MemoizedEventFeed = memo(BroadcastEventFeed);
+const MemoizedBoxScore = memo(BoxScore);
+const MemoizedScoreboard = memo(BroadcastScoreboard);
+const MemoizedControls = memo(BroadcastControls);
 
 function GameSimulationPage() {
   const { gameId } = useParams();
@@ -90,65 +106,89 @@ function GameSimulationPage() {
     quarter: 1,
     timestamp: "12:00",
   });
-  const [displayBoxScore, setDisplayBoxScore] = useState(false);
   const prevEventRef = useRef(null);
+  const playbackIntervalRef = useRef(null);
   const { scores, updateScores, incrementScore } = useScoreState();
   const { playerStats, updatePlayerStats } = usePlayerStats();
   const [homeScoreUpdated, setHomeScoreUpdated] = useState(false);
   const [awayScoreUpdated, setAwayScoreUpdated] = useState(false);
   const [activeTab, setActiveTab] = useState("play-by-play");
 
-  const handleTabChange = (tab) => {
+  // Optimized tab change handler - memoized
+  const handleTabChange = useCallback((tab) => {
     setActiveTab(tab);
-  };
+  }, []);
 
+  // Memoized current event
   const currentEvent = useMemo(
     () => gameData?.events?.[currentEventIndex] || null,
     [gameData, currentEventIndex]
   );
 
+  // Memoized team colors
   const teamColors = useMemo(() => {
-    if (!gameData || !gameData.game_info) return [null, null];
+    if (!gameData?.game_info?.teams) return [null, null];
     return [
       getTeamColors(gameData.game_info.teams[0].team_name),
       getTeamColors(gameData.game_info.teams[1].team_name),
     ];
-  }, [gameData]);
+  }, [gameData?.game_info?.teams]);
 
+  // Memoized court image path
   const courtImagePath = useMemo(() => {
-    if (!gameData || !gameData.game_info) return null;
+    if (!gameData?.game_info?.teams) return null;
     const homeTeam = gameData.game_info.teams[0];
     return getCourtImagePath(homeTeam.team_name);
-  }, [gameData]);
+  }, [gameData?.game_info?.teams]);
 
+  // Memoized events slice for the event feed
+  const currentEvents = useMemo(() => {
+    if (!gameData?.events || currentEventIndex < 0) return [];
+    return gameData.events.slice(0, currentEventIndex + 1);
+  }, [gameData?.events, currentEventIndex]);
+
+  // Data fetching effect
   useEffect(() => {
     const fetchGame = async () => {
       try {
-        const response = await fetch(getAssetPath(`game_${gameId}.json`));
+        // Use AbortController to allow cancellation of fetch if component unmounts
+        const controller = new AbortController();
+        const response = await fetch(getAssetPath(`game_${gameId}.json`), {
+          signal: controller.signal,
+        });
         const data = await response.json();
         setGameData(data);
         setLoading(false);
-        if (data.events && data.events.length > 0) {
+
+        if (data.events?.length > 0) {
           const firstEvent = data.events[0];
           setCurrentTime({
             quarter: firstEvent.quarter,
             timestamp: firstEvent.timestamp,
           });
-          if (firstEvent.details && firstEvent.details.player_states) {
+          if (firstEvent.details?.player_states) {
             updatePlayerStats(firstEvent.details.player_states, data);
           }
         }
+
+        return () => controller.abort();
       } catch (error) {
-        console.error("Error loading game data:", error);
-        setLoading(false);
+        if (error.name !== "AbortError") {
+          console.error("Error loading game data:", error);
+          setLoading(false);
+        }
       }
     };
+
     fetchGame();
   }, [gameId, updatePlayerStats]);
 
+  // Score update handler - memoized
   const updateScoresForEvent = useCallback(
     (event) => {
-      if (event.event_type === "shot_made") {
+      if (!event?.event_type) return;
+
+      if (event.event_type === "shot_made" && event.details?.points) {
         incrementScore(event.team_id, event.details.points);
         if (event.team_id === 0) {
           setHomeScoreUpdated(true);
@@ -157,7 +197,7 @@ function GameSimulationPage() {
           setAwayScoreUpdated(true);
           setTimeout(() => setAwayScoreUpdated(false), 500);
         }
-      } else if (event.event_type === "free_throw" && event.details.made) {
+      } else if (event.event_type === "free_throw" && event.details?.made) {
         incrementScore(event.team_id, 1);
         if (event.team_id === 0) {
           setHomeScoreUpdated(true);
@@ -171,10 +211,15 @@ function GameSimulationPage() {
     [incrementScore]
   );
 
+  // Playback interval effect - with cleanup
   useEffect(() => {
-    let playbackInterval;
     if (isPlaying && gameData?.events) {
-      playbackInterval = setInterval(() => {
+      // Clear any existing interval first
+      if (playbackIntervalRef.current) {
+        clearInterval(playbackIntervalRef.current);
+      }
+
+      playbackIntervalRef.current = setInterval(() => {
         setCurrentEventIndex((prevIndex) => {
           const nextIndex = prevIndex + 1;
           if (nextIndex >= gameData.events.length) {
@@ -186,98 +231,144 @@ function GameSimulationPage() {
         });
       }, 1000 / playbackSpeed);
     }
-    return () => clearInterval(playbackInterval);
-  }, [isPlaying, gameData, playbackSpeed, gameId, navigate]);
 
+    // Cleanup function
+    return () => {
+      if (playbackIntervalRef.current) {
+        clearInterval(playbackIntervalRef.current);
+        playbackIntervalRef.current = null;
+      }
+    };
+  }, [isPlaying, gameData?.events?.length, playbackSpeed, gameId, navigate]);
+
+  // Event processing effect
   useEffect(() => {
-    if (gameData?.events && currentEventIndex < gameData.events.length) {
+    if (
+      gameData?.events &&
+      currentEventIndex >= 0 &&
+      currentEventIndex < gameData.events.length
+    ) {
       const event = gameData.events[currentEventIndex];
+
+      // Use functional updates to prevent dependency issues
       setCurrentTime({ quarter: event.quarter, timestamp: event.timestamp });
+
+      // Process event for scoring
       updateScoresForEvent(event);
-      if (event.details && event.details.player_states) {
+
+      // Update player stats if available
+      if (event.details?.player_states) {
         updatePlayerStats(event.details.player_states, gameData);
       }
     }
   }, [currentEventIndex, gameData, updateScoresForEvent, updatePlayerStats]);
 
+  // Skip to next quarter - memoized
   const handleSkipToNext = useCallback(() => {
-    if (!gameData) return;
+    if (!gameData?.events || isPlaying) return;
+
     const events = gameData.events;
     let nextIndex = currentEventIndex;
+
     while (nextIndex < events.length - 1) {
       nextIndex++;
       if (events[nextIndex].event_type === "quarter_end") {
         setCurrentEventIndex(nextIndex);
         const event = events[nextIndex];
         setCurrentTime({ quarter: event.quarter, timestamp: event.timestamp });
-        updateScores(event.details.home_score, event.details.away_score);
-        if (event.details && event.details.player_states) {
-          updatePlayerStats(event.details.player_states, gameData);
+
+        if (event.details) {
+          updateScores(event.details.home_score, event.details.away_score);
+
+          if (event.details.player_states) {
+            updatePlayerStats(event.details.player_states, gameData);
+          }
         }
         break;
       }
     }
-  }, [gameData, currentEventIndex, updateScores, updatePlayerStats]);
+  }, [gameData, currentEventIndex, updateScores, updatePlayerStats, isPlaying]);
 
+  // Skip to previous quarter - memoized
   const handleSkipToPrevious = useCallback(() => {
-    if (!gameData) return;
+    if (!gameData?.events || isPlaying) return;
+
     const events = gameData.events;
     let prevIndex = currentEventIndex;
+
     while (prevIndex > 0) {
       prevIndex--;
       if (events[prevIndex].event_type === "quarter_end" || prevIndex === 0) {
         setCurrentEventIndex(prevIndex);
         const event = events[prevIndex];
         setCurrentTime({ quarter: event.quarter, timestamp: event.timestamp });
+
         if (prevIndex === 0) {
           updateScores(0, 0);
-        } else {
+        } else if (event.details) {
           updateScores(event.details.home_score, event.details.away_score);
         }
-        if (event.details && event.details.player_states) {
+
+        if (event.details?.player_states) {
           updatePlayerStats(event.details.player_states, gameData);
         }
         break;
       }
     }
-  }, [gameData, currentEventIndex, updateScores, updatePlayerStats]);
+  }, [gameData, currentEventIndex, updateScores, updatePlayerStats, isPlaying]);
 
+  // Skip to end - memoized
   const handleSkipToEnd = useCallback(() => {
-    if (!gameData || !gameData.events.length) return;
+    if (!gameData?.events?.length || isPlaying) return;
+
     const events = gameData.events;
     let endIndex = events.length - 1;
+
     for (let i = 0; i < events.length; i++) {
       if (events[i].event_type === "game_over") {
         endIndex = i;
         break;
       }
     }
+
     setCurrentEventIndex(endIndex);
     const event = events[endIndex];
     setCurrentTime({ quarter: event.quarter, timestamp: event.timestamp });
-    updateScores(event.details.home_score, event.details.away_score);
-    if (event.details && event.details.player_states) {
-      updatePlayerStats(event.details.player_states, gameData);
-    }
-    setIsPlaying(false);
-  }, [gameData, updateScores, updatePlayerStats]);
 
+    if (event.details) {
+      updateScores(event.details.home_score, event.details.away_score);
+
+      if (event.details.player_states) {
+        updatePlayerStats(event.details.player_states, gameData);
+      }
+    }
+  }, [gameData, updateScores, updatePlayerStats, isPlaying]);
+
+  // Skip to start - memoized
   const handleSkipToStart = useCallback(() => {
-    if (!gameData || !gameData.events.length) return;
+    if (!gameData?.events?.length || isPlaying) return;
+
     setCurrentEventIndex(0);
     const event = gameData.events[0];
     setCurrentTime({ quarter: event.quarter, timestamp: event.timestamp });
     updateScores(0, 0);
-    if (event.details && event.details.player_states) {
+
+    if (event.details?.player_states) {
       updatePlayerStats(event.details.player_states, gameData);
     }
-    setIsPlaying(false);
-  }, [gameData, updateScores, updatePlayerStats]);
+  }, [gameData, updateScores, updatePlayerStats, isPlaying]);
 
+  // Play/pause handler - memoized
   const handlePlayPause = useCallback(() => {
     setIsPlaying((prev) => !prev);
   }, []);
 
+  // Playback speed handler - memoized
+  const handleSpeedChange = useCallback((speed) => {
+    setPlaybackSpeed(speed);
+  }, []);
+
+  // Track current event for reference
   useEffect(() => {
     if (
       currentEvent &&
@@ -289,15 +380,13 @@ function GameSimulationPage() {
     }
   }, [currentEvent]);
 
-  const toggleBoxScore = useCallback(() => {
-    setDisplayBoxScore((prev) => !prev);
-  }, []);
-
+  // Loading state
   if (loading) {
     return <div className={styles.loading}>Loading game data...</div>;
   }
+
+  // Error state
   if (!gameData) {
-    console.error("Game data is null or undefined");
     return <div className={styles.error}>Failed to load game data</div>;
   }
 
@@ -313,7 +402,7 @@ function GameSimulationPage() {
         backgroundBlendMode: "overlay",
       }}
     >
-      <BroadcastScoreboard
+      <MemoizedScoreboard
         gameInfo={gameData.game_info}
         scores={scores}
         currentTime={currentTime}
@@ -343,29 +432,33 @@ function GameSimulationPage() {
             Box Score
           </button>
         </div>
+
         {activeTab === "play-by-play" && (
-          <BroadcastEventFeed
-            events={gameData.events.slice(0, currentEventIndex + 1)}
+          <MemoizedEventFeed events={currentEvents} gameInfo={gameData.game_info} />
+        )}
+
+        {activeTab === "box-score" && (
+          <MemoizedBoxScore
             gameInfo={gameData.game_info}
+            playerStats={playerStats}
           />
         )}
-        {activeTab === "box-score" && (
-          <BoxScore gameInfo={gameData.game_info} playerStats={playerStats} />
-        )}
-        <BroadcastControls
+
+        <MemoizedControls
           isPlaying={isPlaying}
           playbackSpeed={playbackSpeed}
           onPlayPause={handlePlayPause}
-          onSpeedChange={setPlaybackSpeed}
+          onSpeedChange={handleSpeedChange}
           onSkipToPrevious={handleSkipToPrevious}
           onSkipToNext={handleSkipToNext}
           onSkipToStart={handleSkipToStart}
           onSkipToEnd={handleSkipToEnd}
         />
       </div>
+
       <Footer />
     </div>
   );
 }
 
-export default GameSimulationPage;
+export default memo(GameSimulationPage);

@@ -1,66 +1,68 @@
-import React from "react";
+import React, { memo } from "react";
 import { getTeamLogoPath } from "../utils/teamUtils";
 import styles from "../styles/BroadcastScoreboard.module.css";
 
-const BroadcastScoreboard = ({ gameInfo, scores, currentTime, teamColors }) => {
+const BroadcastScoreboard = ({ 
+  gameInfo, 
+  scores, 
+  currentTime, 
+  teamColors,
+  homeScoreUpdated,
+  awayScoreUpdated
+}) => {
+  if (!gameInfo || !gameInfo.teams) return null;
+  
   const home = gameInfo.teams[0];
   const away = gameInfo.teams[1];
-
-  // Mock records for design purposes (would come from actual data in production)
-  const homeRecord = gameInfo.teams[0].record || "";
-  const awayRecord = gameInfo.teams[1].record || "";
-
+  
   return (
-    <div className={styles.broadcast_scoreboard}>
-      <div
-        className={styles.scoreboard_left}
-        style={{
-          backgroundColor: teamColors[0]?.primary || "#f8f9fa",
-          color: teamColors[0]?.secondary || "#212529",
-        }}
-      >
-        <div className={styles.team_record}>{homeRecord}</div>
-        <img
-          src={getTeamLogoPath(home.team_name)}
-          alt={home.team_name}
-          className={styles.team_logo}
-        />
-        <div className={styles.team_name}>{home.team_name}</div>
-      </div>
-
-      <div className={styles.scoreboard_center}>
-        <div className={styles.score_display}>
-          <div className={`${styles.score} ${styles.home_score}`}>
-            {scores.home}
-          </div>
-          <div className={styles.score_divider}>-</div>
-          <div className={`${styles.score} ${styles.away_score}`}>
-            {scores.away}
-          </div>
+    <div className={styles.scoreboard}>
+      <div className={styles.scoreboard_container}>
+        <div className={styles.team_logo_wrapper}>
+          <img
+            src={getTeamLogoPath(home.team_name)}
+            alt={home.team_name}
+            className={styles.team_logo}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "/assets/logos/default.png";
+            }}
+          />
         </div>
+        
+        <div 
+          className={`${styles.score} ${homeScoreUpdated ? styles.score_updated : ''}`}
+          style={{color: teamColors[0]?.primary}}
+        >
+          {scores.home}
+        </div>
+        
         <div className={styles.time_display}>
-          <div className={styles.quarter_indicator}>Q{currentTime.quarter}</div>
-          <div className={styles.time_remaining}>{currentTime.timestamp}</div>
+          <span className={styles.quarter_indicator}>{currentTime.quarter}</span>
+          <span className={styles.time_remaining}>{currentTime.timestamp}</span>
         </div>
-      </div>
-
-      <div
-        className={styles.scoreboard_right}
-        style={{
-          backgroundColor: teamColors[1]?.primary || "#f8f9fa",
-          color: teamColors[1]?.secondary || "#212529",
-        }}
-      >
-        <div className={styles.team_record}>{awayRecord}</div>
-        <img
-          src={getTeamLogoPath(away.team_name)}
-          alt={away.team_name}
-          className={styles.team_logo}
-        />
-        <div className={styles.team_name}>{away.team_name}</div>
+        
+        <div 
+          className={`${styles.score} ${awayScoreUpdated ? styles.score_updated : ''}`}
+          style={{color: teamColors[1]?.primary}}
+        >
+          {scores.away}
+        </div>
+        
+        <div className={styles.team_logo_wrapper}>
+          <img
+            src={getTeamLogoPath(away.team_name)}
+            alt={away.team_name}
+            className={styles.team_logo}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "/assets/logos/default.png";
+            }}
+          />
+        </div>
       </div>
     </div>
   );
 };
 
-export default BroadcastScoreboard;
+export default memo(BroadcastScoreboard);

@@ -16,21 +16,33 @@ function GameSummaryPage() {
   const navigate = useNavigate();
   const [gameData, setGameData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("summary");
+  const [backgroundImage, setBackgroundImage] = useState(null);
 
   useEffect(() => {
     const fetchGame = async () => {
       try {
         const response = await fetch(getAssetPath(`game_${gameId}.json`));
+        if (!response.ok) {
+          throw new Error("Game data not found");
+        }
         const data = await response.json();
         setGameData(data);
+
+        // Set background image based on home team
+        if (data.game_info?.teams?.length > 0) {
+          const homeTeam = data.game_info.teams[0].team_name;
+          setBackgroundImage(getCourtImagePath(homeTeam));
+        }
+
         setLoading(false);
       } catch (error) {
         console.error("Error loading game summary data:", error);
+        setError(error.message || "Failed to load game data");
         setLoading(false);
       }
     };
-
     fetchGame();
   }, [gameId]);
 
@@ -47,17 +59,14 @@ function GameSummaryPage() {
   };
 
   const finalStats = useMemo(() => {
-    if (!gameData) return null; // Find the game_over event to get final scores
-
+    if (!gameData) return null;
     // Find the game_over event to get final scores
     const gameOverEvent = gameData.events.find(
       (event) => event.event_type === "game_over"
     );
     if (!gameOverEvent) return null;
 
-    const lastCheckpoint =
-      gameData.checkpoints[gameData.checkpoints.length - 1];
-
+    const lastCheckpoint = gameData.checkpoints[gameData.checkpoints.length - 1];
     const quarterScores = [];
     let homeTotal = 0;
     let awayTotal = 0;
@@ -66,262 +75,215 @@ function GameSummaryPage() {
       .filter((event) => event.event_type === "quarter_end")
       .forEach((event) => {
         const { quarter, home_score, away_score } = event.details;
-
         const homeQuarterScore = home_score - homeTotal;
         const awayQuarterScore = away_score - awayTotal;
-
         quarterScores.push({
           quarter,
           home: homeQuarterScore,
           away: awayQuarterScore,
         });
-
         homeTotal = home_score;
         awayTotal = away_score;
       });
+
+    // Initialize default teamStats if they don't exist in the checkpoint
+    const defaultTeamStats = {
+      fieldGoalMade: 0,
+      fieldGoalAttempted: 0,
+      threePointMade: 0,
+      threePointAttempted: 0,
+      freeThrowsMade: 0,
+      freeThrowsAttempted: 0,
+      rebounds: 0,
+      assists: 0,
+      steals: 0,
+      blocks: 0,
+      turnovers: 0,
+      possessions: 0,
+      pace: 0,
+      ortg: 0,
+      drtg: 0,
+    };
+
+    // Ensure teamStats exists with proper structure
+    const teamStats = {
+      home: { ...defaultTeamStats, ...(lastCheckpoint?.team_stats?.home || {}) },
+      away: { ...defaultTeamStats, ...(lastCheckpoint?.team_stats?.away || {}) },
+    };
 
     return {
       homeScore: gameOverEvent.details.home_score,
       awayScore: gameOverEvent.details.away_score,
       quarterScores,
-      teamStats: lastCheckpoint.team_stats,
-      playerStats: lastCheckpoint.player_states,
+      teamStats,
+      playerStats: lastCheckpoint?.player_states || {},
     };
   }, [gameData]);
 
   // Format player stats for BoxScore component
   const formattedPlayerStats = useMemo(() => {
     if (!finalStats || !finalStats.playerStats || !gameData) return {};
-    
+
     const formattedStats = {};
-    
+
     // Process each player's stats from the checkpoint data
-    gameData.game_info.teams.forEach((team, teamIndex) => {
+    gameData.game_info.teams.forEach((team) => {
       team.players.forEach((player) => {
         const playerId = player.player_id || `p${player.player_index}`;
-        
         if (finalStats.playerStats[playerId]) {
           const playerState = finalStats.playerStats[playerId];
-          
+
+          // Calculate shooting percentages for display
+          const fgAttempted = playerState.fieldGoalAttempted || 0;
+          const fgMade = playerState.fieldGoalMade || 0;
+          const tpAttempted = playerState.threePointAttempted || 0;
+          const tpMade = playerState.threePointMade || 0;
+          const ftAttempted = playerState.freeThrowsAttempted || 0;
+          const ftMade = playerState.freeThrowsMade || 0;
+
           formattedStats[playerId] = {
-            points: playerState.pts || 0,
-            rebounds: (playerState.orb || 0) + (playerState.drb || 0),
-            assists: playerState.ast || 0,
-            steals: playerState.stl || 0,
-            turnovers: playerState.tov || 0,
-            fieldGoalMade: playerState.fg || 0,
-            fieldGoalAttempted: playerState.fga || 0,
-            threePointMade: playerState.tp || 0,
-            threePointAttempted: playerState.tpa || 0,
-            freeThrowsMade: playerState.ft || 0,
-            freeThrowsAttempted: playerState.fta || 0,
-            minutes: Math.round(playerState.mp / 60) || 0,
-            blocks: playerState.blk || 0,
-            fouls: playerState.pf || 0
+            ...playerState,
+            fgPct: fgAttempted > 0 ? ((fgMade / fgAttempted) * 100).toFixed(1) : "0.0",
+            tpPct: tpAttempted > 0 ? ((tpMade / tpAttempted) * 100).toFixed(1) : "0.0",
+            ftPct: ftAttempted > 0 ? ((ftMade / ftAttempted) * 100).toFixed(1) : "0.0",
           };
         }
       });
     });
-    
+
     return formattedStats;
   }, [finalStats, gameData]);
 
-  const teamColors = useMemo(() => {
-    if (!gameData || !gameData.game_info) return [null, null];
-    return [
-      getTeamColors(gameData.game_info.teams[0].team_name),
-      getTeamColors(gameData.game_info.teams[1].team_name),
-    ];
-  }, [gameData]);
-
-  const courtImagePath = useMemo(() => {
-    if (!gameData || !gameData.game_info) return null;
-    const homeTeam = gameData.game_info.teams[0];
-    return getCourtImagePath(homeTeam.team_name);
-  }, [gameData]);
-
-  const advancedStats = useMemo(() => {
-    if (!finalStats) return null;
-
-    const home = finalStats.teamStats[0];
-    const away = finalStats.teamStats[1];
-
-    return {
-      home: {
-        efgPct:
-          home.fg > 0
-            ? Math.round(((home.fg + 0.5 * home.tp) / home.fga) * 1000) / 10
-            : 0,
-        tsPct:
-          home.pts > 0
-            ? Math.round(
-                (home.pts / (2 * (home.fga + 0.44 * home.fta))) * 1000
-              ) / 10
-            : 0,
-        possessions: Math.round(
-          home.fga - home.orb + home.tov + 0.44 * home.fta
-        ),
-        pace: Math.round(
-          ((home.fga - home.orb + home.tov + 0.44 * home.fta) * 48) / 40
-        ),
-        ortg: Math.round(
-          (home.pts / (home.fga - home.orb + home.tov + 0.44 * home.fta)) * 100
-        ),
-        astRatio: home.fg > 0 ? Math.round((home.ast / home.fg) * 100) : 0,
-        drtg: Math.round(
-          (away.pts / (away.fga - away.orb + away.tov + 0.44 * away.fta)) * 100
-        ),
-      },
-      away: {
-        efgPct:
-          away.fg > 0
-            ? Math.round(((away.fg + 0.5 * away.tp) / away.fga) * 1000) / 10
-            : 0,
-        tsPct:
-          away.pts > 0
-            ? Math.round(
-                (away.pts / (2 * (away.fga + 0.44 * away.fta))) * 1000
-              ) / 10
-            : 0,
-        possessions: Math.round(
-          away.fga - away.orb + away.tov + 0.44 * away.fta
-        ),
-        pace: Math.round(
-          ((away.fga - away.orb + away.tov + 0.44 * away.fta) * 48) / 40
-        ),
-        ortg: Math.round(
-          (away.pts / (away.fga - away.orb + away.tov + 0.44 * away.fta)) * 100
-        ),
-        astRatio: away.fg > 0 ? Math.round((away.ast / away.fg) * 100) : 0,
-        drtg: Math.round(
-          (home.pts / (home.fga - home.orb + home.tov + 0.44 * home.fta)) * 100
-        ),
-      },
-    };
-  }, [finalStats]);
-
-  const getTeamAbbreviation = (teamName) => {
-    if (!teamName) return "";
-
-    if (teamName.toLowerCase().includes("trail blazers")) return "POR";
-    if (teamName.toLowerCase().includes("timberwolves")) return "MIN";
-
-    const words = teamName.split(" ");
-    if (words.length === 1) {
-      return teamName.substring(0, 3).toUpperCase();
-    }
-
-    return words
-      .slice(0, 3)
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase();
+  // Helper function to determine which team has better stats in a category
+  const getBetterTeam = (home, away) => {
+    if (home > away) return "home";
+    if (away > home) return "away";
+    return null;
   };
 
   if (loading) {
-    return <div className={styles.loading}>Loading summary...</div>;
+    return (
+      <div className={styles.game_summary_container}>
+        <div className={styles.loading}>
+          <span>Loading game summary...</span>
+        </div>
+      </div>
+    );
   }
 
-  if (!gameData || !finalStats) {
-    return <div className={styles.error}>Failed to load game summary</div>;
+  if (error || !gameData || !finalStats) {
+    return (
+      <div className={styles.game_summary_container}>
+        <div className={styles.error}>
+          <h3>Error Loading Game Data</h3>
+          <p>{error || "Game data could not be loaded"}</p>
+          <button
+            onClick={() => navigate("/select-teams")}
+            className={styles.play_again_button}
+          >
+            Start New Game
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const homeTeam = gameData.game_info.teams[0];
   const awayTeam = gameData.game_info.teams[1];
-  const winner = finalStats.homeScore > finalStats.awayScore ? 0 : 1;
-  const homeAbbr = homeTeam.abbreviation;
-  const awayAbbr = awayTeam.abbreviation;
+  const homeColors = getTeamColors(homeTeam.team_name);
+  const awayColors = getTeamColors(awayTeam.team_name);
+  const winner = finalStats.homeScore > finalStats.awayScore ? "home" : "away";
 
   return (
     <div
       className={styles.game_summary_container}
       style={{
-        backgroundImage: courtImagePath ? `url(${courtImagePath})` : "none",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed",
-        backgroundBlendMode: "overlay",
+        backgroundImage: backgroundImage ? `url(${getAssetPath(backgroundImage)})` : undefined,
       }}
     >
       <div className={styles.final_score_banner}>
         <div className={styles.team_logo_container}>
           <img
-            src={getTeamLogoPath(homeTeam.team_name)}
+            src={getAssetPath(getTeamLogoPath(homeTeam.team_name))}
             alt={`${homeTeam.team_name} logo`}
             className={styles.team_logo}
-            onError={(e) => {
-              e.target.src = "/assets/logos/default.png";
-            }}
           />
         </div>
-
-        <div
-          className={cx(styles.score_display, {
-            [styles.winner_home]: winner === 0,
-          })}
-        >
-          <span
-            className={styles.team_abbr}
-            style={{ color: teamColors[0]?.primary }}
+        
+        <div className={styles.team_info}>
+          <div
+            className={styles.team_name}
+            style={{ color: homeColors?.primary }}
           >
-            {homeAbbr}
-          </span>
-          <span className={styles.score_value}>{finalStats.homeScore}</span>
+            {homeTeam.team_name}
+          </div>
+          <div className={styles.team_record}>{homeTeam.record || "0-0"}</div>
         </div>
-
-        <div className={styles.score_separator}>FINAL</div>
-
-        <div
-          className={cx(styles.score_display, {
-            [styles.winner_away]: winner === 1,
-          })}
-        >
-          <span className={styles.score_value}>{finalStats.awayScore}</span>
-          <span
-            className={styles.team_abbr}
-            style={{ color: teamColors[1]?.primary }}
+        
+        <div className={styles.score_display}>
+          <div className={styles.final_text}>Final</div>
+          <div className={styles.scores}>
+            <div
+              className={styles.score_value}
+              style={{ 
+                color: winner === "home" ? homeColors?.primary : "#1d1d1f",
+                opacity: winner === "home" ? 1 : 0.8
+              }}
+            >
+              {finalStats.homeScore}
+            </div>
+            <div className={styles.score_separator}>-</div>
+            <div
+              className={styles.score_value}
+              style={{ 
+                color: winner === "away" ? awayColors?.primary : "#1d1d1f",
+                opacity: winner === "away" ? 1 : 0.8
+              }}
+            >
+              {finalStats.awayScore}
+            </div>
+          </div>
+          {winner && (
+            <div className={styles.winner_indicator}>
+              {winner === "home" ? homeTeam.team_name : awayTeam.team_name}
+            </div>
+          )}
+        </div>
+        
+        <div className={styles.team_info} style={{ textAlign: "right" }}>
+          <div
+            className={styles.team_name}
+            style={{ color: awayColors?.primary }}
           >
-            {awayAbbr}
-          </span>
+            {awayTeam.team_name}
+          </div>
+          <div className={styles.team_record}>{awayTeam.record || "0-0"}</div>
         </div>
-
+        
         <div className={styles.team_logo_container}>
           <img
-            src={getTeamLogoPath(awayTeam.team_name)}
+            src={getAssetPath(getTeamLogoPath(awayTeam.team_name))}
             alt={`${awayTeam.team_name} logo`}
             className={styles.team_logo}
-            onError={(e) => {
-              e.target.src = "/assets/logos/default.png";
-            }}
           />
         </div>
       </div>
 
       <div className={styles.tabs}>
         <button
-          className={cx(
-            styles.tab,
-            activeTab === "summary" ? styles.active : ""
-          )}
+          className={cx(styles.tab, { [styles.active]: activeTab === "summary" })}
           onClick={() => handleTabChange("summary")}
         >
-          Summary
+          Game Summary
         </button>
         <button
-          className={cx(
-            styles.tab,
-            activeTab === "boxscore" ? styles.active : ""
-          )}
+          className={cx(styles.tab, { [styles.active]: activeTab === "boxscore" })}
           onClick={() => handleTabChange("boxscore")}
         >
           Box Score
         </button>
         <button
-          className={cx(
-            styles.tab,
-            activeTab === "advanced" ? styles.active : ""
-          )}
+          className={cx(styles.tab, { [styles.active]: activeTab === "advanced" })}
           onClick={() => handleTabChange("advanced")}
         >
           Advanced Stats
@@ -332,32 +294,55 @@ function GameSummaryPage() {
         {activeTab === "summary" && (
           <div className={styles.summary_tab}>
             <div className={styles.quarter_scores}>
+              <h3 className={styles.section_title}>Scoring by Quarter</h3>
               <table className={styles.quarters_table}>
                 <thead>
                   <tr>
-                    <th></th>
+                    <th>Team</th>
                     {finalStats.quarterScores.map((q) => (
-                      <th key={q.quarter}>Q{q.quarter}</th>
+                      <th key={`q${q.quarter}`}>Q{q.quarter}</th>
                     ))}
-                    <th>F</th>
+                    <th>Final</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr style={{ color: teamColors[0]?.primary }}>
-                    <td className={styles.team_name}>{homeAbbr}</td>
+                  <tr className={styles.team_row}>
+                    <td
+                      className={styles.team_name_cell}
+                      style={{ color: homeColors?.primary }}
+                    >
+                      {homeTeam.team_name}
+                    </td>
                     {finalStats.quarterScores.map((q) => (
-                      <td key={q.quarter}>{q.home}</td>
+                      <td key={`home_q${q.quarter}`}>{q.home}</td>
                     ))}
-                    <td className={styles.final_score_cell}>
+                    <td
+                      className={styles.final_score_cell}
+                      style={{
+                        color: winner === "home" ? homeColors?.primary : "#212529",
+                        fontWeight: winner === "home" ? "700" : "600",
+                      }}
+                    >
                       {finalStats.homeScore}
                     </td>
                   </tr>
-                  <tr style={{ color: teamColors[1]?.primary }}>
-                    <td className={styles.team_name}>{awayAbbr}</td>
+                  <tr className={styles.team_row}>
+                    <td
+                      className={styles.team_name_cell}
+                      style={{ color: awayColors?.primary }}
+                    >
+                      {awayTeam.team_name}
+                    </td>
                     {finalStats.quarterScores.map((q) => (
-                      <td key={q.quarter}>{q.away}</td>
+                      <td key={`away_q${q.quarter}`}>{q.away}</td>
                     ))}
-                    <td className={styles.final_score_cell}>
+                    <td
+                      className={styles.final_score_cell}
+                      style={{
+                        color: winner === "away" ? awayColors?.primary : "#212529",
+                        fontWeight: winner === "away" ? "700" : "600",
+                      }}
+                    >
                       {finalStats.awayScore}
                     </td>
                   </tr>
@@ -366,200 +351,325 @@ function GameSummaryPage() {
             </div>
 
             <div className={styles.key_stats}>
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[0].fg_pct >
-                      finalStats.teamStats[1].fg_pct,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {finalStats.teamStats[0].fg_pct}%
-                </div>
-                <div className={styles.stat_name}>FG%</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[1].fg_pct >
-                      finalStats.teamStats[0].fg_pct,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {finalStats.teamStats[1].fg_pct}%
-                </div>
-              </div>
+              <h3 className={styles.section_title}>Key Team Stats</h3>
+              <div className={styles.stat_container}>
+                {finalStats.teamStats && (
+                  <>
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.fieldGoalMade /
+                                Math.max(1, finalStats.teamStats.home.fieldGoalAttempted),
+                              finalStats.teamStats.away.fieldGoalMade /
+                                Math.max(1, finalStats.teamStats.away.fieldGoalAttempted)
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.fieldGoalMade}/{finalStats.teamStats.home.fieldGoalAttempted}
+                        <div className={styles.stat_percent}>
+                          {finalStats.teamStats.home.fieldGoalAttempted > 0
+                            ? `${((finalStats.teamStats.home.fieldGoalMade / finalStats.teamStats.home.fieldGoalAttempted) * 100).toFixed(1)}%`
+                            : "0.0%"}
+                        </div>
+                      </div>
+                      <div className={styles.stat_name}>Field Goals</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.fieldGoalMade /
+                                Math.max(1, finalStats.teamStats.away.fieldGoalAttempted),
+                              finalStats.teamStats.home.fieldGoalMade /
+                                Math.max(1, finalStats.teamStats.home.fieldGoalAttempted)
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.fieldGoalMade}/{finalStats.teamStats.away.fieldGoalAttempted}
+                        <div className={styles.stat_percent}>
+                          {finalStats.teamStats.away.fieldGoalAttempted > 0
+                            ? `${((finalStats.teamStats.away.fieldGoalMade / finalStats.teamStats.away.fieldGoalAttempted) * 100).toFixed(1)}%`
+                            : "0.0%"}
+                        </div>
+                      </div>
+                    </div>
 
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[0].tp_pct >
-                      finalStats.teamStats[1].tp_pct,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {finalStats.teamStats[0].tp_pct}%
-                </div>
-                <div className={styles.stat_name}>3PT%</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[1].tp_pct >
-                      finalStats.teamStats[0].tp_pct,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {finalStats.teamStats[1].tp_pct}%
-                </div>
-              </div>
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.threePointMade /
+                                Math.max(1, finalStats.teamStats.home.threePointAttempted),
+                              finalStats.teamStats.away.threePointMade /
+                                Math.max(1, finalStats.teamStats.away.threePointAttempted)
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.threePointMade}/{finalStats.teamStats.home.threePointAttempted}
+                        <div className={styles.stat_percent}>
+                          {finalStats.teamStats.home.threePointAttempted > 0
+                            ? `${((finalStats.teamStats.home.threePointMade / finalStats.teamStats.home.threePointAttempted) * 100).toFixed(1)}%`
+                            : "0.0%"}
+                        </div>
+                      </div>
+                      <div className={styles.stat_name}>3-Pointers</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.threePointMade /
+                                Math.max(1, finalStats.teamStats.away.threePointAttempted),
+                              finalStats.teamStats.home.threePointMade /
+                                Math.max(1, finalStats.teamStats.home.threePointAttempted)
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.threePointMade}/{finalStats.teamStats.away.threePointAttempted}
+                        <div className={styles.stat_percent}>
+                          {finalStats.teamStats.away.threePointAttempted > 0
+                            ? `${((finalStats.teamStats.away.threePointMade / finalStats.teamStats.away.threePointAttempted) * 100).toFixed(1)}%`
+                            : "0.0%"}
+                        </div>
+                      </div>
+                    </div>
 
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[0].ft_pct >
-                      finalStats.teamStats[1].ft_pct,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {finalStats.teamStats[0].ft_pct}%
-                </div>
-                <div className={styles.stat_name}>FT%</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[1].ft_pct >
-                      finalStats.teamStats[0].ft_pct,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {finalStats.teamStats[1].ft_pct}%
-                </div>
-              </div>
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.freeThrowsMade /
+                                Math.max(1, finalStats.teamStats.home.freeThrowsAttempted),
+                              finalStats.teamStats.away.freeThrowsMade /
+                                Math.max(1, finalStats.teamStats.away.freeThrowsAttempted)
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.freeThrowsMade}/{finalStats.teamStats.home.freeThrowsAttempted}
+                        <div className={styles.stat_percent}>
+                          {finalStats.teamStats.home.freeThrowsAttempted > 0
+                            ? `${((finalStats.teamStats.home.freeThrowsMade / finalStats.teamStats.home.freeThrowsAttempted) * 100).toFixed(1)}%`
+                            : "0.0%"}
+                        </div>
+                      </div>
+                      <div className={styles.stat_name}>Free Throws</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.freeThrowsMade /
+                                Math.max(1, finalStats.teamStats.away.freeThrowsAttempted),
+                              finalStats.teamStats.home.freeThrowsMade /
+                                Math.max(1, finalStats.teamStats.home.freeThrowsAttempted)
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.freeThrowsMade}/{finalStats.teamStats.away.freeThrowsAttempted}
+                        <div className={styles.stat_percent}>
+                          {finalStats.teamStats.away.freeThrowsAttempted > 0
+                            ? `${((finalStats.teamStats.away.freeThrowsMade / finalStats.teamStats.away.freeThrowsAttempted) * 100).toFixed(1)}%`
+                            : "0.0%"}
+                        </div>
+                      </div>
+                    </div>
 
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[0].orb +
-                        finalStats.teamStats[0].drb >
-                      finalStats.teamStats[1].orb +
-                        finalStats.teamStats[1].drb,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {finalStats.teamStats[0].orb + finalStats.teamStats[0].drb}
-                </div>
-                <div className={styles.stat_name}>REB</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[1].orb +
-                        finalStats.teamStats[1].drb >
-                      finalStats.teamStats[0].orb +
-                        finalStats.teamStats[0].drb,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {finalStats.teamStats[1].orb + finalStats.teamStats[1].drb}
-                </div>
-              </div>
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.rebounds,
+                              finalStats.teamStats.away.rebounds
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.rebounds}
+                      </div>
+                      <div className={styles.stat_name}>Rebounds</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.rebounds,
+                              finalStats.teamStats.home.rebounds
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.rebounds}
+                      </div>
+                    </div>
 
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[0].ast >
-                      finalStats.teamStats[1].ast,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {finalStats.teamStats[0].ast}
-                </div>
-                <div className={styles.stat_name}>AST</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[1].ast >
-                      finalStats.teamStats[0].ast,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {finalStats.teamStats[1].ast}
-                </div>
-              </div>
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.assists,
+                              finalStats.teamStats.away.assists
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.assists}
+                      </div>
+                      <div className={styles.stat_name}>Assists</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.assists,
+                              finalStats.teamStats.home.assists
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.assists}
+                      </div>
+                    </div>
 
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[0].stl >
-                      finalStats.teamStats[1].stl,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {finalStats.teamStats[0].stl}
-                </div>
-                <div className={styles.stat_name}>STL</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[1].stl >
-                      finalStats.teamStats[0].stl,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {finalStats.teamStats[1].stl}
-                </div>
-              </div>
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.steals,
+                              finalStats.teamStats.away.steals
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.steals}
+                      </div>
+                      <div className={styles.stat_name}>Steals</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.steals,
+                              finalStats.teamStats.home.steals
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.steals}
+                      </div>
+                    </div>
 
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[0].blk >
-                      finalStats.teamStats[1].blk,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {finalStats.teamStats[0].blk}
-                </div>
-                <div className={styles.stat_name}>BLK</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[1].blk >
-                      finalStats.teamStats[0].blk,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {finalStats.teamStats[1].blk}
-                </div>
-              </div>
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.blocks,
+                              finalStats.teamStats.away.blocks
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.blocks}
+                      </div>
+                      <div className={styles.stat_name}>Blocks</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.blocks,
+                              finalStats.teamStats.home.blocks
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.blocks}
+                      </div>
+                    </div>
 
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[0].tov <
-                      finalStats.teamStats[1].tov,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {finalStats.teamStats[0].tov}
-                </div>
-                <div className={styles.stat_name}>TOV</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      finalStats.teamStats[1].tov <
-                      finalStats.teamStats[0].tov,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {finalStats.teamStats[1].tov}
-                </div>
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.turnovers,
+                              finalStats.teamStats.home.turnovers
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.turnovers}
+                      </div>
+                      <div className={styles.stat_name}>Turnovers</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.turnovers,
+                              finalStats.teamStats.away.turnovers
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.turnovers}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -577,160 +687,147 @@ function GameSummaryPage() {
         {activeTab === "advanced" && (
           <div className={styles.advanced_tab}>
             <div className={styles.advanced_stats}>
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.home.efgPct > advancedStats.away.efgPct,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {advancedStats.home.efgPct}%
-                </div>
-                <div className={styles.stat_name}>Effective FG%</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.away.efgPct > advancedStats.home.efgPct,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {advancedStats.away.efgPct}%
-                </div>
-              </div>
+              <h3 className={styles.section_title}>Advanced Team Statistics</h3>
+              <div className={styles.stat_container}>
+                {finalStats.teamStats && (
+                  <>
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.homeScore / Math.max(1, finalStats.teamStats.home.possessions),
+                              finalStats.awayScore / Math.max(1, finalStats.teamStats.away.possessions)
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.possessions}
+                      </div>
+                      <div className={styles.stat_name}>Possessions</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.awayScore / Math.max(1, finalStats.teamStats.away.possessions),
+                              finalStats.homeScore / Math.max(1, finalStats.teamStats.home.possessions)
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.possessions}
+                      </div>
+                    </div>
 
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.home.tsPct > advancedStats.away.tsPct,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {advancedStats.home.tsPct}%
-                </div>
-                <div className={styles.stat_name}>True Shooting%</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.away.tsPct > advancedStats.home.tsPct,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {advancedStats.away.tsPct}%
-                </div>
-              </div>
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.pace,
+                              finalStats.teamStats.away.pace
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.pace}
+                      </div>
+                      <div className={styles.stat_name}>Pace</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.pace,
+                              finalStats.teamStats.home.pace
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.pace}
+                      </div>
+                    </div>
 
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.home.astRatio > advancedStats.away.astRatio,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {advancedStats.home.astRatio}%
-                </div>
-                <div className={styles.stat_name}>Assist Ratio</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.away.astRatio > advancedStats.home.astRatio,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {advancedStats.away.astRatio}%
-                </div>
-              </div>
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.ortg,
+                              finalStats.teamStats.away.ortg
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.ortg}
+                      </div>
+                      <div className={styles.stat_name}>Offensive Rating</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.ortg,
+                              finalStats.teamStats.home.ortg
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.ortg}
+                      </div>
+                    </div>
 
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.home.possessions >
-                      advancedStats.away.possessions,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {advancedStats.home.possessions}
-                </div>
-                <div className={styles.stat_name}>Possessions</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.away.possessions >
-                      advancedStats.home.possessions,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {advancedStats.away.possessions}
-                </div>
-              </div>
-
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.home.pace > advancedStats.away.pace,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {advancedStats.home.pace}
-                </div>
-                <div className={styles.stat_name}>Pace</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.away.pace > advancedStats.home.pace,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {advancedStats.away.pace}
-                </div>
-              </div>
-
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.home.ortg > advancedStats.away.ortg,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {advancedStats.home.ortg}
-                </div>
-                <div className={styles.stat_name}>Offensive Rating</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.away.ortg > advancedStats.home.ortg,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {advancedStats.away.ortg}
-                </div>
-              </div>
-
-              <div className={styles.stat_row}>
-                <div
-                  className={cx(styles.team_stat, styles.home_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.home.drtg < advancedStats.away.drtg,
-                  })}
-                  style={{ color: teamColors[0]?.primary }}
-                >
-                  {advancedStats.home.drtg}
-                </div>
-                <div className={styles.stat_name}>Defensive Rating</div>
-                <div
-                  className={cx(styles.team_stat, styles.away_stat, {
-                    [styles.stat_winner]:
-                      advancedStats.away.drtg < advancedStats.home.drtg,
-                  })}
-                  style={{ color: teamColors[1]?.primary }}
-                >
-                  {advancedStats.away.drtg}
-                </div>
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.drtg,
+                              finalStats.teamStats.home.drtg
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.drtg}
+                      </div>
+                      <div className={styles.stat_name}>Defensive Rating</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.drtg,
+                              finalStats.teamStats.away.drtg
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.drtg}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -738,12 +835,17 @@ function GameSummaryPage() {
       </div>
 
       <div className={styles.summary_actions}>
-        <button onClick={handlePlayAgain} className={styles.play_again_button}>
+        <button
+          onClick={handlePlayAgain}
+          className={`${styles.action_button} ${styles.play_again_button}`}
+          aria-label="New Game"
+        >
           New Game
         </button>
         <button
           onClick={handleWatchReplay}
-          className={styles.watch_replay_button}
+          className={`${styles.action_button} ${styles.watch_replay_button}`}
+          aria-label="Watch Replay"
         >
           Watch Replay
         </button>

@@ -1,12 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Text:wght@400;500;600&display=swap');
+
 .game_simulation_container {
   display: flex;
   flex-direction: column;
   padding: 2rem 3rem;
   min-height: 100vh;
-  background: linear-gradient(135deg, rgba(245, 247, 250, 0.9) 0%, rgba(228, 229, 230, 0.9) 100%);
-  color: #212529;
+  background: linear-gradient(135deg, #f5f5f7 0%, #e9eaed 100%);
+  color: #1d1d1f;
   position: relative;
   z-index: 0;
+  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .game_simulation_container::before {
@@ -16,29 +20,68 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(255, 255, 255, 0.6);
+  background-position: center;
+  background-size: cover;
+  opacity: 0.08;
+  z-index: -2;
+}
+
+.game_simulation_container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
   z-index: -1;
 }
 
 .upper_section {
   margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.two_column_layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.main_column {
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar_column {
+  display: flex;
+  flex-direction: column;
 }
 
 .toggle_boxscore_btn {
-  background: #007bff;
+  background: #007aff;
   border: none;
   color: white;
   padding: 0.8rem 1.5rem;
   border-radius: 8px;
   cursor: pointer;
   margin-bottom: 1rem;
-  font-size: 1.1rem;
-  font-weight: bold;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
 }
 
 .toggle_boxscore_btn:hover {
-  background: #0069d9;
+  background: #0062cc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.toggle_boxscore_btn:active {
+  transform: translateY(0);
+  background: #004999;
 }
 
 .lower_section {
@@ -52,19 +95,24 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  font-size: 1.8rem;
-  color: #212529;
+  font-size: 1.5rem;
+  color: #1d1d1f;
   flex-direction: column;
+  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.loading {
+  background-color: rgba(255, 255, 255, 0.8);
 }
 
 .loading:after {
   content: "";
-  width: 60px;
-  height: 60px;
+  width: 50px;
+  height: 50px;
   margin: 20px auto;
   border-radius: 50%;
-  border: 6px solid #dee2e6;
-  border-top-color: #007bff;
+  border: 4px solid #e9ecef;
+  border-top-color: #007aff;
   animation: spin 1s linear infinite;
 }
 
@@ -73,62 +121,148 @@
 }
 
 .error {
-  color: #dc3545;
+  color: #ff3b30;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  text-align: center;
 }
 
-/* Added display toggle button */
+.error h2 {
+  margin-bottom: 1rem;
+  font-size: 1.8rem;
+  font-weight: 500;
+  letter-spacing: -0.5px;
+}
+
+/* Display toggle styles */
 .display_toggle {
   display: flex;
   justify-content: center;
-  margin: 15px 0;
+  margin: 1rem 0;
 }
 
 .display_toggle_btn {
-  background-color: #f8f9fa;
-  color: #212529;
-  border: 1px solid #dee2e6;
-  padding: 10px 20px;
+  background-color: rgba(240, 240, 245, 0.8);
+  color: #1d1d1f;
+  border: none;
+  padding: 0.6rem 1.2rem;
   border-radius: 20px;
   cursor: pointer;
-  font-weight: bold;
-  margin: 0 5px;
+  font-weight: 500;
+  margin: 0 0.4rem;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+  letter-spacing: -0.3px;
 }
 
 .display_toggle_btn:hover {
-  background-color: #e9ecef;
+  background-color: rgba(225, 225, 230, 0.8);
 }
 
 .display_toggle_btn.active {
-  background-color: #007bff;
+  background-color: #007aff;
   color: white;
+  box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
 }
 
-/* Responsive styles */
-@media (max-width: 768px) {
-  .game_simulation_container {
-    padding: 1rem 1.5rem;
-  }
-}
-
+/* Tab styles */
 .tabs {
   display: flex;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  background-color: rgba(240, 240, 245, 0.8);
+  padding: 0.4rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .tab {
-  padding: 0.5rem 1rem;
-  margin: 0 0.5rem;
+  padding: 0.7rem 1.4rem;
+  margin: 0 0.3rem;
   cursor: pointer;
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  font-size: 1rem;
-  font-weight: bold;
+  background-color: transparent;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #1d1d1f;
+  transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+  letter-spacing: -0.3px;
+}
+
+.tab:hover {
+  background-color: rgba(225, 225, 230, 0.8);
 }
 
 .tab.active {
-  background-color: #007bff;
+  background-color: #007aff;
   color: white;
-  border-color: #007bff;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(0, 122, 255, 0.2);
+}
+
+/* Responsive styles */
+@media (max-width: 992px) {
+  .game_simulation_container {
+    padding: 1.5rem 2rem;
+  }
+  
+  .two_column_layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .sidebar_column {
+    order: -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .game_simulation_container {
+    padding: 1rem 1.2rem;
+  }
+  
+  .tabs {
+    flex-wrap: wrap;
+  }
+  
+  .tab {
+    flex: 1 0 40%;
+    margin: 0.2rem;
+    text-align: center;
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .display_toggle_btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .game_simulation_container {
+    padding: 0.8rem;
+  }
+  
+  .upper_section, .lower_section {
+    margin-bottom: 1rem;
+  }
+  
+  .tab {
+    flex: 1 0 100%;
+    font-size: 0.85rem;
+  }
+  
+  .display_toggle {
+    flex-wrap: wrap;
+  }
+  
+  .display_toggle_btn {
+    flex: 1 0 45%;
+    margin: 0.2rem;
+    font-size: 0.85rem;
+  }
 }
