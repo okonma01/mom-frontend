@@ -54,6 +54,13 @@
             "player_index": 8
           }
         ],
+        "starting_lineup": [
+          "pVUVp",
+          "pczmw",
+          "plLas",
+          "pC2QE",
+          "pF9cW"
+        ],
         "season": 2024,
         "coach": "Joe Mazzulla",
         "record": "64-18",
@@ -104,6 +111,13 @@
             "player_name": "Michael Porter Jr.",
             "player_index": 7
           }
+        ],
+        "starting_lineup": [
+          "pKvyJ",
+          "pTYWE",
+          "pSwFn",
+          "p8t0g",
+          "pJtN2"
         ],
         "season": 2023,
         "coach": "Michael Malone",

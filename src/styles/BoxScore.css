@@ -1,9 +1,11 @@
 .boxscore {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
   background-color: rgba(255, 255, 255, 0.7);
-  /* padding: 0 1.2rem; */
   border-radius: 8px;
   color: #212529;
-  max-height: 60vh;
+  max-height: 51vh;
   overflow-y: auto;
   margin-bottom: 1.5rem;
   box-shadow: 0 4px 8px rgba(0,0,0,0.1);
@@ -19,8 +21,6 @@
 
 /* Add horizontal scrolling capability for the table container */
 .team-boxscore {
-  position: relative; /* For positioning context */
-  overflow-x: auto; /* Enable horizontal scrolling */
   scrollbar-width: none; /* Hide Firefox scrollbar */
   -ms-overflow-style: none; /* Hide IE/Edge scrollbar */
 }
@@ -33,8 +33,7 @@
 .team-header {
   display: flex;
   align-items: center;
-  margin: 1rem 0 0;
-  padding: 0.5rem 1rem;
+  padding: 0.8rem 2rem;
   background-color: rgba(245, 247, 250, 1);
   border-radius: 4px;
   position: sticky; /* Make the team header sticky too */
@@ -59,22 +58,21 @@
 
 .boxscore th, 
 .boxscore td {
-  text-align: center;
   border-bottom: 1px solid #dee2e6;
+  text-align: center;
 }
 
 .boxscore th {
-  padding: 0 4px; /* Increased padding from 8px to 10px */
   background-color: #e9ecef;
   font-size: 1rem;
   font-weight: bold;
   position: sticky;
-  top: 42px; /* Height of team header + some padding */
+  top: 55px; /* Height of team header + some padding */
   z-index: 1;
 }
 .boxscore td {
   font-size: 0.95rem;
-  padding: 10px 4px; /* Increased padding from 8px to 10px */
+  padding: 0; /* Increased padding from 8px to 10px */
 }
 
 thead tr {
@@ -90,19 +88,20 @@ tbody tr {
 }
 
 .player-col {
-  text-align: left;
-  width: 20%;
+  text-align: left !important;
+  padding-right: 0.5rem !important;
+  width: 22%;
 }
 
 .icon-col {
-  width: 40px;
-  padding: 0 !important;
-  text-align: center;
+  width: 12%;
+  /* padding: 0 !important; */
+  text-align: center !important;
 }
 
 .player-icon {
-  width: 35px;
-  height: 35px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   vertical-align: middle;

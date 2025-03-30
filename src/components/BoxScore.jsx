@@ -59,6 +59,35 @@ const BoxScore = ({ gameInfo, playerStats }) => {
     // Extract just the nickname (last part of the team name)
     const teamNickname = team.team_name.split(' ').pop();
     
+    // Sort players: starters first (by position), then bench
+    let sortedPlayers = [...(team.players || [])];
+    
+    if (team.starting_lineup) {
+      // Sort players using the starting_lineup directly from gameInfo
+      sortedPlayers.sort((a, b) => {
+        const aStarterIndex = team.starting_lineup.indexOf(a.player_id);
+        const bStarterIndex = team.starting_lineup.indexOf(b.player_id);
+        
+        // Both are starters - sort by their position order in starting_lineup
+        if (aStarterIndex !== -1 && bStarterIndex !== -1) {
+          return aStarterIndex - bStarterIndex;
+        }
+        
+        // Only a is a starter
+        if (aStarterIndex !== -1) {
+          return -1;
+        }
+        
+        // Only b is a starter
+        if (bStarterIndex !== -1) {
+          return 1;
+        }
+        
+        // Neither are starters - maintain original order
+        return 0;
+      });
+    }
+    
     return (
       <div className="team-boxscore">
         <div className="team-header">
@@ -67,7 +96,7 @@ const BoxScore = ({ gameInfo, playerStats }) => {
         <table>
           <thead>
             <tr>
-              <th className="icon-col"></th> {/* Empty column for player icon */}
+              <th className="icon-col"></th>
               <th className="player-col">Player</th>
               <th>MIN</th>
               <th>PTS</th>
@@ -81,7 +110,7 @@ const BoxScore = ({ gameInfo, playerStats }) => {
             </tr>
           </thead>
           <tbody>
-            {(team.players || []).map((player) => {
+            {sortedPlayers.map((player) => {
               const stats = playerStats[player.player_id] || {
                 points: 0, rebounds: 0, assists: 0, steals: 0, turnovers: 0,
                 fieldGoalMade: 0, fieldGoalAttempted: 0,
@@ -105,7 +134,7 @@ const BoxScore = ({ gameInfo, playerStats }) => {
                   <td className="player-col">
                     <span>{player.player_name || player.player_id}</span>
                   </td>
-                  <td>0</td> {/* Minutes played - to be implemented */}
+                  <td>0</td>
                   <td>{stats.points || 0}</td>
                   <td>{stats.rebounds || 0}</td>
                   <td>{stats.assists || 0}</td>
