@@ -43,6 +43,21 @@
   transform: translateY(0);
 }
 
+.control_btn:disabled {
+  background-color: #b3d7ff;
+  color: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  opacity: 0.65;
+}
+
+.control_btn:disabled:hover {
+  background-color: #b3d7ff;
+  transform: none;
+  box-shadow: none;
+}
+
 .play_btn {
   padding: 0.7rem 1.5rem;
   font-size: 1.1rem;

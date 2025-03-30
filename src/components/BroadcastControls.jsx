@@ -13,13 +13,37 @@ const BroadcastControls = ({
 }) => {
   return (
     <div className={styles.broadcast_controls_panel}>
-      <button onClick={onSkipToStart} className={styles.control_btn}>|&lt;</button>
-      <button onClick={onSkipToPrevious} className={styles.control_btn}>&lt;&lt;</button>
+      <button 
+        onClick={onSkipToStart} 
+        className={styles.control_btn}
+        disabled={isPlaying}
+      >
+        |&lt;
+      </button>
+      <button 
+        onClick={onSkipToPrevious} 
+        className={styles.control_btn}
+        disabled={isPlaying}
+      >
+        &lt;&lt;
+      </button>
       <button onClick={onPlayPause} className={styles.control_btn}>
         {isPlaying ? "Pause" : "Play"}
       </button>
-      <button onClick={onSkipToNext} className={styles.control_btn}>&gt;&gt;</button>
-      <button onClick={onSkipToEnd} className={styles.control_btn}>&gt;|</button>
+      <button 
+        onClick={onSkipToNext} 
+        className={styles.control_btn}
+        disabled={isPlaying}
+      >
+        &gt;&gt;
+      </button>
+      <button 
+        onClick={onSkipToEnd} 
+        className={styles.control_btn}
+        disabled={isPlaying}
+      >
+        &gt;|
+      </button>
       <div className={styles.speed_control}>
         <label>Speed:</label>
         <input 
