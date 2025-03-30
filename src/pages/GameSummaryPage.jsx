@@ -89,6 +89,43 @@ function GameSummaryPage() {
     };
   }, [gameData]);
 
+  // Format player stats for BoxScore component
+  const formattedPlayerStats = useMemo(() => {
+    if (!finalStats || !finalStats.playerStats || !gameData) return {};
+    
+    const formattedStats = {};
+    
+    // Process each player's stats from the checkpoint data
+    gameData.game_info.teams.forEach((team, teamIndex) => {
+      team.players.forEach((player) => {
+        const playerId = player.player_id || `p${player.player_index}`;
+        
+        if (finalStats.playerStats[playerId]) {
+          const playerState = finalStats.playerStats[playerId];
+          
+          formattedStats[playerId] = {
+            points: playerState.pts || 0,
+            rebounds: (playerState.orb || 0) + (playerState.drb || 0),
+            assists: playerState.ast || 0,
+            steals: playerState.stl || 0,
+            turnovers: playerState.tov || 0,
+            fieldGoalMade: playerState.fg || 0,
+            fieldGoalAttempted: playerState.fga || 0,
+            threePointMade: playerState.tp || 0,
+            threePointAttempted: playerState.tpa || 0,
+            freeThrowsMade: playerState.ft || 0,
+            freeThrowsAttempted: playerState.fta || 0,
+            minutes: Math.round(playerState.mp / 60) || 0,
+            blocks: playerState.blk || 0,
+            fouls: playerState.pf || 0
+          };
+        }
+      });
+    });
+    
+    return formattedStats;
+  }, [finalStats, gameData]);
+
   const teamColors = useMemo(() => {
     if (!gameData || !gameData.game_info) return [null, null];
     return [
@@ -532,7 +569,7 @@ function GameSummaryPage() {
           <div className={styles.boxscore_tab}>
             <BoxScore
               gameInfo={gameData.game_info}
-              playerStats={finalStats.playerStats}
+              playerStats={formattedPlayerStats}
             />
           </div>
         )}

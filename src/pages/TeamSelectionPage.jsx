@@ -63,7 +63,7 @@ function TeamSelectionPage() {
   const handleStartSimulation = (mode) => {
     if (!homeTeam || !awayTeam) return;
     
-    const gameId = "gkRPr"; // Placeholder - would be generated
+    const gameId = "gKiL4"; // Placeholder - would be generated
     
     localStorage.setItem('simulationMode', mode);
     localStorage.setItem('homeTeamId', homeTeam.id);
