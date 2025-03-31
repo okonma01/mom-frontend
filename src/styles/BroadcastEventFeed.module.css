@@ -1,14 +1,11 @@
-@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=SF+Pro+Text:wght@400;500;600&display=swap');
-
 .broadcast_feed_container {
+  max-height: 45vh;
   background-color: rgba(255, 255, 255, 0.85);
   border: none;
   border-radius: 16px;
   padding: 1.2rem;
   margin-bottom: 1rem;
   transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
-  max-height: 55vh; /* Increased to allow more content */
   display: flex;
   flex-direction: column;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
@@ -49,7 +46,6 @@
   flex-direction: column;
   gap: 0.8rem;
   overflow-y: auto;
-  max-height: 45vh; /* Increased to allow more content */
   padding-right: 10px;
   font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
 }
@@ -78,11 +74,33 @@
   gap: 1rem;
   animation: fadeInUp 0.3s cubic-bezier(0.2, 0, 0.2, 1);
   transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+  border-left: 3px solid transparent;
 }
 
 .broadcast_event:hover {
   transform: translateY(-2px);
   background-color: rgba(235, 235, 240, 0.8);
+}
+
+/* Add color indicators for different event types */
+.event_score {
+  border-left-color: #34c759; /* Green for scores */
+}
+
+.event_three {
+  border-left-color: #ff9500; /* Orange for 3-pointers */
+}
+
+.event_steal {
+  border-left-color: #007aff; /* Blue for steals */
+}
+
+.event_block {
+  border-left-color: #5856d6; /* Purple for blocks */
+}
+
+.event_rebound {
+  border-left-color: #af52de; /* Purple for rebounds */
 }
 
 @keyframes fadeInUp {
@@ -95,7 +113,9 @@
   height: 48px;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  background-color: #f5f5f7;
 }
 
 .event_time {
@@ -152,6 +172,7 @@
   border-top: none;
   border-bottom: none;
   font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  border-left: none;
 }
 
 .player_name {
@@ -285,11 +306,6 @@
 /* Collapsed state */
 .collapsed .broadcast_content {
   display: none;
-}
-
-.feed {
-  max-height: 500px; /* Match box score height */
-  overflow-y: auto;
 }
 
 .event {

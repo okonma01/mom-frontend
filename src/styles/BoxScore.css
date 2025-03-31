@@ -9,17 +9,37 @@
   margin: 0 auto;
   color: #1d1d1f;
   font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
-  max-height: 500px; /* Reduced from 650px */
-  overflow: hidden; /* Hide overflow content initially */
 }
 
 .boxscore-container {
+  max-height: 36vh;
   display: flex;
   flex-direction: column;
   margin-bottom: 1rem;
-  max-height: 420px; /* Adjusted for better proportion */
-  overflow-y: auto;
+  overflow-y: scroll;
   flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.boxscore-container::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.boxscore-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.03);
+  border-radius: 3px;
+}
+
+.boxscore-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.boxscore-container::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 .boxscore-loading {
@@ -81,12 +101,6 @@
   justify-content: center;
 }
 
-.team-tab-logo img {
-  max-width: 24px;
-  max-height: 24px;
-  object-fit: contain;
-}
-
 .boxscore-team-header {
   display: flex;
   align-items: center;
@@ -123,7 +137,6 @@
   background-color: rgba(255, 255, 255, 0.85);
   border-radius: 0 0 12px 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
 }
@@ -131,9 +144,7 @@
 .table-container {
   overflow-x: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
-  max-height: 480px;
-  overflow-y: auto;
+  scrollbar-color: rgba(60, 52, 52, 0.2) transparent;
 }
 
 .table-container::-webkit-scrollbar {
@@ -155,25 +166,6 @@
   background-color: rgba(0, 0, 0, 0.2);
 }
 
-.boxscore-container::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.boxscore-container::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.03);
-  border-radius: 3px;
-}
-
-.boxscore-container::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
-}
-
-.boxscore-container::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 0, 0, 0.2);
-}
-
 .boxscore table {
   width: 100%;
   border-collapse: collapse;
@@ -185,8 +177,9 @@
 .boxscore td {
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   text-align: center;
-  padding: 0.6rem 0.4rem; /* Reduced from 0.8rem 0.4rem */
-  line-height: 1.2; /* Added for tighter spacing */
+  padding: 0.65rem 0.4rem;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
 .boxscore th {
@@ -196,9 +189,6 @@
   color: #86868b;
   text-transform: uppercase;
   letter-spacing: -0.2px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);

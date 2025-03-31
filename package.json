@@ -4,6 +4,10 @@
   "description": "Make or Miss Basketball Simulation Frontend",
   "license": "MIT",
   "homepage": "https://okonma01.github.io/mom-frontend",
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=7.0.0"
+  },
   "scripts": {
     "start": "vite",
     "preview": "vite preview",

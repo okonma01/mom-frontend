@@ -240,7 +240,7 @@ const BroadcastEventFeed = ({ events, gameInfo, isLive }) => {
   };
 
   return (
-    <div className={`${styles.broadcast_feed_container} ${isCollapsed ? styles.collapsed : ''}`} style={{ maxHeight: '500px' }}>
+    <div className={`${styles.broadcast_feed_container} ${isCollapsed ? styles.collapsed : ''}`}>
       <div className={styles.broadcast_header} onClick={toggleCollapse}>
         <h3>
           Play-by-Play
