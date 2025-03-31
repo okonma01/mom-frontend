@@ -124,6 +124,11 @@
   border-radius: 0 0 16px 16px;
 }
 
+.team_logo_button img {
+  width: 120px;
+  height: 120px;
+}
+
 /* Team dropdown selectors */
 .team_selector {
   padding: 0.5rem 0.75rem;
