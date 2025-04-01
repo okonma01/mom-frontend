@@ -1,396 +1,313 @@
-/* Base layout */
-.team_selection_container {
-  padding: 2rem 1rem 0.5rem;
+/* Apple-inspired clean design */
+.container {
+  padding: 20px 16px;
   margin: 0 auto;
-  position: relative;
-  background-color: #f8f9fa;
-  color: #212529;
+  background-color: #ffffff;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+  position: relative;  /* Add this line */
 }
 
-.matchup_header {
+/* Header */
+.header {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 20px;
 }
 
-.matchup_header h1 {
-  font-size: 1.8rem;
-  margin-bottom: 0;
-  color: #212529;
-  letter-spacing: 1px;
-}
-
-/* Court graphic background */
-.court_graphic {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: -1;
-  opacity: 0.05;
-  pointer-events: none;
-}
-
-.center_circle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  border: 4px solid #555;
-  transform: translate(-50%, -50%);
-}
-
-.center_line {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  width: 4px;
-  height: 100%;
-  background-color: #555;
-  transform: translateX(-50%);
-}
-
-/* Team selection cards */
-.teams_comparison {
-  display: flex;
-  justify-content: space-between;
-  align-items: stretch;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-  gap: 1.5rem;
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.team_card {
-  flex: 1;
-  border-radius: 16px;
-  padding: 0 0 0.5rem;
-  background-color: rgba(255, 255, 255, 0.9);
-  color: #212529;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  display: flex;
-  flex-direction: column;
-  border: 2px solid transparent;
-  overflow: hidden;
-  min-height: auto;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  transition: all 0.3s cubic-bezier(0.2, 0, 0.2, 1);
-}
-
-.team_card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
-}
-
-.home_team {
-  margin-right: 0;
-}
-
-.away_team {
-  margin-left: 0;
-}
-
-.team_card_header {
-  padding: 0.8rem;
-  text-align: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.team_card_header h2 {
+.header h1 {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1d1d1f;
   margin: 0;
-  font-size: 1.4rem;
-  font-weight: 600;
+  padding: 0;
   letter-spacing: -0.5px;
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
 }
 
-.team_card_content {
-  position: relative;
+/* Tabs */
+.tabs {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 140px;
-  overflow: hidden;
-  padding: 1rem 0;
-  border-radius: 0 0 16px 16px;
+  border-bottom: 1px solid #e6e6e6;
+  margin-bottom: 20px;
 }
 
-.team_logo_button img {
-  width: 120px;
-  height: 120px;
-}
-
-/* Team dropdown selectors */
-.team_selector {
-  padding: 0.5rem 0.75rem;
-  width: 100%;
-  z-index: 10;
-}
-
-.team_selector select {
-  width: 100%;
-  padding: 0.5rem;
-  font-size: 0.9rem;
-  background-color: #fff;
-  color: #212529;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.team_selector select:focus {
-  outline: none;
-  border-color: #80bdff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-}
-
-/* Position-based matchups */
-.position_matchups {
-  margin: 1rem 0;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  position: relative;
-  z-index: 1;
-  max-height: 50vh; /* Fixed height that won't take over the viewport */
-  overflow-y: auto;
-  
-  /* Hide scrollbar but keep functionality */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
-  
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-
-/* Hide scrollbar for Chrome, Safari and Opera */
-.position_matchups::-webkit-scrollbar {
-  display: none;
-}
-
-.position_row {
-  display: flex;
-  align-items: center;
-  min-height: 80px;
-  position: relative;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.position_row:last-child {
-  border-bottom: none;
-}
-
-.position_indicator {
-  width: 50px;
-  height: 50px;
-  flex-shrink: 0;
-  background-color: #f5f5f7;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  letter-spacing: -0.5px;
-  font-size: 1.2rem;
-  color: #1d1d1f;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-.player_matchup {
+.tabButton {
   flex: 1;
-  display: flex;
-  align-items: center;
+  background: none;
+  border: none;
+  padding: 12px 0;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+  outline: none;
 }
 
-.home_player {
-  justify-content: flex-end;
-}
-
-.away_player {
-  justify-content: flex-start;
-}
-
-/* Player icon and details */
-.player_icon_container {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 2px solid #dee2e6;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0 0.75rem;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
-  background-color: #f8f9fa;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.player_icon_container:hover {
-  transform: scale(1.05);
-  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.12);
-}
-
-.player_icon {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.player_details {
-  margin: 0 0.75rem;
-}
-
-.home_player .player_details {
-  text-align: right;
-  margin-right: 1rem;
-}
-
-.away_player .player_details {
-  text-align: left;
-  margin-left: 1rem;
-}
-
-.player_name {
-  font-weight: 400;
-  font-size: 0.8rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: #4a4a4a;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-.player_last_name {
+.activeTab {
   font-weight: 600;
-  font-size: 1rem;
-  color: #1d1d1f;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-top: 0.1rem;
-  line-height: 1.2;
 }
 
-.player_number {
-  font-size: 0.8rem;
-  color: #6c757d;
+/* Team selector */
+.teamSelectorContainer {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.teamSelector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.navButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: #f5f5f7;
+  border: none;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #1d1d1f;
+  transition: background-color 0.2s;
+}
+
+.navButton:hover {
+  background-color: #e8e8ed;
+}
+
+.teamCard {
+  flex: 1;
+  padding: 16px;
+  margin: 0 10px;
+  border-radius: 12px;
+  background-color: #f5f5f7;
+}
+
+.teamInfo {
+  display: flex;
+  align-items: center;
+}
+
+.teamLogo {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  margin-right: 16px;
+}
+
+.teamDetails {
+  flex: 1;
+}
+
+.teamDetails h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  letter-spacing: -0.5px;
+  color: #1d1d1f;
+}
+
+.teamMeta {
+  font-size: 14px;
+  color: #86868b;
+  margin-bottom: 4px;
+  display: flex;
+  gap: 6px;
+}
+
+.teamCoach {
+  font-size: 14px;
+  color: #515154;
+}
+
+/* Matchup section */
+.matchupSection {
+  background-color: #f5f5f7;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.matchupHeader {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.matchupTeam {
+  flex: 1;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.matchupTeam:last-child {
+  text-align: right;
+}
+
+.matchupLabel {
+  font-size: 14px;
+  color: #86868b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   font-weight: 500;
 }
 
-.empty_player {
-  font-style: italic;
-  color: #adb5bd;
-  padding: 0.75rem;
-  font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 0.85rem;
+.matchupContent {
+  padding: 8px 0;
 }
 
-/* Simulation buttons */
-.simulation_options {
-  margin-top: 1.5rem;
-  padding: 1rem 0;
+.positionRow {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid #e6e6e6;
 }
 
-.sim_buttons {
+.positionRow:last-child {
+  border-bottom: none;
+}
+
+.playerCell {
+  flex: 1;
+}
+
+.playerCell:first-child {
+  text-align: right;
+}
+
+.positionCell {
+  width: 38px;
+  height: 38px;
+  background-color: #ffffff;
+  border-radius: 50%;
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 1.5rem;
-  max-width: 800px;
-  width: 100%;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1d1d1f;
+  margin: 0 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.sim_button {
+.playerInfo {
+  display: flex;
+  align-items: center;
+}
+
+.playerCell:first-child .playerInfo {
+  flex-direction: row-reverse;
+  justify-content: flex-start;
+}
+
+.playerName {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 0.85rem 1.5rem;
+  max-width: 120px;
+}
+
+.playerCell:first-child .playerName {
+  margin-right: 12px;
+  text-align: right;
+}
+
+.playerCell:last-child .playerName {
+  margin-left: 12px;
+  text-align: left;
+}
+
+.playerLastName {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1d1d1f;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerFirstName {
+  font-size: 12px;
+  color: #515154;
+  letter-spacing: -0.2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.playerNumber {
+  font-size: 14px;
+  font-weight: 500;
+  color: #86868b;
+  min-width: 1.1rem;
+}
+
+.emptyPlayer {
+  color: #aeaeb2;
+  font-size: 14px;
+}
+
+/* Action buttons */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+.actionButton {
   border: none;
   border-radius: 12px;
-  cursor: pointer;
-  font-size: 1rem;
+  padding: 14px 20px;
+  font-size: 16px;
   font-weight: 600;
-  min-width: 200px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.actionButton:hover {
+  transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  text-align: center;
-  flex: 1;
-  max-width: 300px;
-  letter-spacing: -0.3px;
-  font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-.sim_button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.sim_button:active {
-  transform: translateY(1px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-}
-
-.quick_sim {
-  background-color: rgba(0, 122, 255, 0.9);
-  color: white;
-}
-
-.quick_sim:hover {
-  background-color: rgba(0, 122, 255, 1);
-}
-
-.full_sim {
-  background-color: rgba(255, 59, 48, 0.9);
-  color: white;
-}
-
-.full_sim:hover {
-  background-color: rgba(255, 59, 48, 1);
-}
-
-.button_desc {
-  font-size: 0.75rem;
-  font-weight: normal;
-  margin-top: 0.4rem;
-  opacity: 0.85;
-  letter-spacing: -0.2px;
+.buttonDesc {
+  font-size: 12px;
+  font-weight: 400;
+  margin-top: 4px;
+  opacity: 0.8;
 }
 
 /* Loading and error states */
-.team_selection_loading, .team_selection_error {
+.loadingContainer, .errorContainer {
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background: #f8f9fa;
-  color: #212529;
+  background-color: #ffffff;
 }
 
 .loader {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #007bff;
+  width: 36px;
+  height: 36px;
+  border: 2px solid #e6e6e6;
+  border-top: 2px solid #1d1d1f;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
   animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 @keyframes spin {
@@ -398,87 +315,59 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Responsive styles */
-@media (max-width: 768px) {
-  .teams_comparison {
-    flex-direction: column;
+/* Mobile optimizations */
+@media (max-width: 380px) {
+  .container {
+    padding: 16px 12px;
   }
   
-  .team_card {
-    margin-bottom: 1rem;
-    margin-right: 0;
-    margin-left: 0;
+  .header h1 {
+    font-size: 20px;
   }
   
-  .home_team, .away_team {
-    margin: 0 0 1rem;
+  .tabButton {
+    font-size: 14px;
+    padding: 10px 0;
   }
   
-  .home_team {
-    order: 0;
+  .teamLogo {
+    width: 48px;
+    height: 48px;
   }
   
-  .away_team {
-    order: 2;
+  .teamDetails h2 {
+    font-size: 16px;
   }
   
-  .sim_buttons {
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: center;
+  .teamMeta, .teamCoach {
+    font-size: 12px;
   }
   
-  .sim_button {
-    width: 80%;
+  .playerLastName {
+    font-size: 13px;
   }
   
-  .position_row {
-    /* flex-direction: column; */
-    padding: 1rem 0;
-    min-height: auto;
+  .playerFirstName, .playerNumber {
+    font-size: 11px;
   }
-  
-  .player_matchup {
-    width: 100%;
-    justify-content: center;
-    padding: 0.5rem 0;
-  }
-  
-  .home_player, .away_player {
-    order: 2;
-  }
-  
-  .position_indicator {
-    order: 1;
-    margin: 0.5rem 0;
-  }
-  
-  .player_details {
-    text-align: center;
-  }
-  
-  .text_right {
-    text-align: center;
-  }
-  
-  .team_logo_button {
-    width: 100px;
-    height: 100px;
-  }
-}
 
-@media (max-width: 480px) {
-  .team_card_content {
-    /* flex-direction: column; */
-    align-items: center;
+  .playerNumber {
+    min-width: 0.85rem;
   }
   
-  .sim_button {
-    width: 100%;
+  .positionCell {
+    width: 32px;
+    height: 32px;
+    font-size: 12px;
+    margin: 0 8px;
   }
   
-  .team_logo_button {
-    width: 80px;
-    height: 80px;
+  .actionButton {
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+  
+  .buttonDesc {
+    font-size: 11px;
   }
 }

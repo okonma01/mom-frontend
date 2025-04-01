@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/TeamSelectionPage.module.css';
 import Footer from "../components/Footer";
@@ -6,28 +6,30 @@ import { fetchTeams } from "../utils/api";
 import { getPlayerImagePath, getPlayerFirstName, getPlayerLastName } from "../utils/playerUtils";
 
 function TeamSelectionPage() {
-  const [availableTeams, setAvailableTeams] = useState([]);
-  const [homeTeam, setHomeTeam] = useState(null);
-  const [awayTeam, setAwayTeam] = useState(null);
+  const [teams, setTeams] = useState([]);
+  const [homeTeamIndex, setHomeTeamIndex] = useState(0);
+  const [awayTeamIndex, setAwayTeamIndex] = useState(1);
   const [loading, setLoading] = useState(true);
-  const [activeDropdown, setActiveDropdown] = useState(null); // 'home', 'away', or null
+  const [activeTab, setActiveTab] = useState('home');
   const navigate = useNavigate();
+  const teamSelectorRef = useRef(null);
 
   useEffect(() => {
     const loadTeams = async () => {
       try {
         setLoading(true);
         const teamsData = await fetchTeams();
-        setAvailableTeams(teamsData);
+        const teamsArray = Object.values(teamsData);
         
-        if (teamsData.length >= 2) {
-          const celtics = teamsData.find(t => t.id === 'celtics24') || teamsData[0];
-          const nuggets = teamsData.find(t => t.id === 'nuggets23') || 
-                          (teamsData.length > 1 ? teamsData[1] : teamsData[0]);
-          
-          setHomeTeam(celtics);
-          setAwayTeam(nuggets);
-        }
+        setTeams(teamsArray);
+        
+        // Initialize with Celtics and Nuggets by default
+        const celticsIndex = teamsArray.findIndex(t => t.team_id === 'celtics24');
+        const nuggetsIndex = teamsArray.findIndex(t => t.team_id === 'nuggets23');
+        
+        setHomeTeamIndex(celticsIndex >= 0 ? celticsIndex : 0);
+        setAwayTeamIndex(nuggetsIndex >= 0 ? nuggetsIndex : (teamsArray.length > 1 ? 1 : 0));
+        
         setLoading(false);
       } catch (error) {
         console.error("Error loading teams:", error);
@@ -38,36 +40,38 @@ function TeamSelectionPage() {
     loadTeams();
   }, []);
 
-  const handleHomeTeamChange = (e) => {
-    const teamId = e.target.value;
-    const selected = availableTeams.find(team => team.id === teamId);
-    setHomeTeam(selected);
-    setActiveDropdown(null); // Hide dropdown after selection
-  };
-
-  const handleAwayTeamChange = (e) => {
-    const teamId = e.target.value;
-    const selected = availableTeams.find(team => team.id === teamId);
-    setAwayTeam(selected);
-    setActiveDropdown(null); // Hide dropdown after selection
-  };
-
-  const toggleDropdown = (team) => {
-    if (activeDropdown === team) {
-      setActiveDropdown(null);
+  const changeTeam = (direction, side) => {
+    if (side === 'home') {
+      const newIndex = (homeTeamIndex + direction + teams.length) % teams.length;
+      // Don't allow both teams to be the same
+      if (newIndex !== awayTeamIndex) {
+        setHomeTeamIndex(newIndex);
+      } else {
+        // Skip to the next team if they would be the same
+        setHomeTeamIndex((newIndex + direction + teams.length) % teams.length);
+      }
     } else {
-      setActiveDropdown(team);
+      const newIndex = (awayTeamIndex + direction + teams.length) % teams.length;
+      // Don't allow both teams to be the same
+      if (newIndex !== homeTeamIndex) {
+        setAwayTeamIndex(newIndex);
+      } else {
+        // Skip to the next team if they would be the same
+        setAwayTeamIndex((newIndex + direction + teams.length) % teams.length);
+      }
     }
   };
 
   const handleStartSimulation = (mode) => {
-    if (!homeTeam || !awayTeam) return;
+    if (teams.length === 0) return;
     
+    const homeTeam = teams[homeTeamIndex];
+    const awayTeam = teams[awayTeamIndex];
     const gameId = "gKiL4"; // Placeholder - would be generated
     
     localStorage.setItem('simulationMode', mode);
-    localStorage.setItem('homeTeamId', homeTeam.id);
-    localStorage.setItem('awayTeamId', awayTeam.id);
+    localStorage.setItem('homeTeamId', homeTeam.team_id);
+    localStorage.setItem('awayTeamId', awayTeam.team_id);
     
     if (mode === 'quick') {
       navigate(`/summary/${gameId}`);
@@ -76,223 +80,238 @@ function TeamSelectionPage() {
     }
   };
 
-  const getBackgroundStyle = () => {
-    if (!homeTeam || !awayTeam) return {};
-    
-    return {
-      backgroundColor: '#f8f9fa'
-    };
-  };
-
-  const getButtonStyle = (team) => {
-    if (!team) return {};
-    
-    return {
-      backgroundColor: team.colors?.primary,
-      color: '#ffffff'
-    };
-  };
-
   if (loading) {
     return (
-      <div className={styles.team_selection_loading}>
+      <div className={styles.loadingContainer}>
         <div className={styles.loader}></div>
         <p>Loading teams...</p>
       </div>
     );
   }
 
-  if (!homeTeam || !awayTeam) {
+  if (teams.length === 0) {
     return (
-      <div className={styles.team_selection_error}>
+      <div className={styles.errorContainer}>
         <p>Unable to load teams. Please try again later.</p>
       </div>
     );
   }
 
+  const homeTeam = teams[homeTeamIndex];
+  const awayTeam = teams[awayTeamIndex];
+
   return (
-    <div className={styles.team_selection_container} style={getBackgroundStyle()}>
-      <div className={styles.matchup_header}>
+    <div className={styles.container}>
+      <div className={styles.header}>
         <h1>Team Selection</h1>
       </div>
       
-      <div className={styles.court_graphic}>
-        <div className={styles.center_circle}></div>
-        <div className={styles.center_line}></div>
+      <div className={styles.tabs}>
+        <button 
+          className={`${styles.tabButton} ${activeTab === 'home' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('home')}
+          style={{
+            color: activeTab === 'home' ? homeTeam.colors?.primary : '#000',
+            borderBottomColor: activeTab === 'home' ? homeTeam.colors?.primary : 'transparent'
+          }}
+        >
+          Home Team
+        </button>
+        <button 
+          className={`${styles.tabButton} ${activeTab === 'away' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('away')}
+          style={{
+            color: activeTab === 'away' ? awayTeam.colors?.primary : '#000',
+            borderBottomColor: activeTab === 'away' ? awayTeam.colors?.primary : 'transparent'
+          }}
+        >
+          Away Team
+        </button>
       </div>
       
-      <div className={styles.teams_comparison}>
-        <div 
-          className={`${styles.team_card} ${styles.home_team}`}
-          style={{
-            borderColor: homeTeam.colors?.primary || '#333'
-          }}
-        >
-          <div className={styles.team_card_header} style={{ color: homeTeam.colors?.primary || '#333' }}>
-            <h2>HOME</h2>
-          </div>
-          
-          <div className={styles.team_card_content}>
-            <div 
-              className={styles.team_logo_button} 
-              onClick={() => toggleDropdown('home')}
+      <div className={styles.teamSelectorContainer} ref={teamSelectorRef}>
+        {activeTab === 'home' ? (
+          <div className={styles.teamSelector}>
+            <button 
+              className={styles.navButton} 
+              onClick={() => changeTeam(-1, 'home')}
+              aria-label="Previous team"
             >
-              <img 
-                src={homeTeam.logoUrl} 
-                alt={`${homeTeam.name} logo`} 
-                className={styles.team_logo}
-                onError={(e) => {
-                  e.target.src = "/assets/logos/default.png";
-                }}
-              />
+              ‹
+            </button>
+            
+            <div className={styles.teamCard}>
+              <div className={styles.teamInfo}>
+                <img 
+                  src={homeTeam.logoUrl || `/assets/logos/${homeTeam.team_id}.png`} 
+                  alt={`${homeTeam.team_name} logo`} 
+                  className={styles.teamLogo}
+                  onError={(e) => {
+                    e.target.src = "/assets/logos/default.png";
+                  }}
+                />
+                <div className={styles.teamDetails}>
+                  <h2>{homeTeam.team_name}</h2>
+                  <div className={styles.teamMeta}>
+                    <span>{homeTeam.season}</span>
+                    <span>•</span>
+                    <span>{homeTeam.record}</span>
+                  </div>
+                  <div className={styles.teamCoach}>
+                    Coach: {homeTeam.coach}
+                  </div>
+                </div>
+              </div>
             </div>
             
-            {activeDropdown === 'home' && (
-              <div className={styles.team_selector}>
-                <select 
-                  value={homeTeam.id} 
-                  onChange={handleHomeTeamChange}
-                  style={{ borderColor: homeTeam.colors?.primary || '#333' }}
-                >
-                  {availableTeams.map(team => (
-                    <option key={`home-${team.id}`} value={team.id}>
-                      {team.name} ({team.season})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div 
-          className={`${styles.team_card} ${styles.away_team}`}
-          style={{
-            borderColor: awayTeam.colors?.primary || '#333'
-          }}
-        >
-          <div className={styles.team_card_header} style={{ color: awayTeam.colors?.primary || '#333' }}>
-            <h2>AWAY</h2>
-          </div>
-          
-          <div className={styles.team_card_content}>
-            <div 
-              className={styles.team_logo_button} 
-              onClick={() => toggleDropdown('away')}
+            <button 
+              className={styles.navButton} 
+              onClick={() => changeTeam(1, 'home')}
+              aria-label="Next team"
             >
-              <img 
-                src={awayTeam.logoUrl} 
-                alt={`${awayTeam.name} logo`} 
-                className={styles.team_logo}
-                onError={(e) => {
-                  e.target.src = "/assets/logos/default.png";
-                }}
-              />
+              ›
+            </button>
+          </div>
+        ) : (
+          <div className={styles.teamSelector}>
+            <button 
+              className={styles.navButton} 
+              onClick={() => changeTeam(-1, 'away')}
+              aria-label="Previous team"
+            >
+              ‹
+            </button>
+            
+            <div className={styles.teamCard}>
+              <div className={styles.teamInfo}>
+                <img 
+                  src={awayTeam.logoUrl || `/assets/logos/${awayTeam.team_id}.png`} 
+                  alt={`${awayTeam.team_name} logo`} 
+                  className={styles.teamLogo}
+                  onError={(e) => {
+                    e.target.src = "/assets/logos/default.png";
+                  }}
+                />
+                <div className={styles.teamDetails}>
+                  <h2>{awayTeam.team_name}</h2>
+                  <div className={styles.teamMeta}>
+                    <span>{awayTeam.season}</span>
+                    <span>•</span>
+                    <span>{awayTeam.record}</span>
+                  </div>
+                  <div className={styles.teamCoach}>
+                    Coach: {awayTeam.coach}
+                  </div>
+                </div>
+              </div>
             </div>
             
-            {activeDropdown === 'away' && (
-              <div className={styles.team_selector}>
-                <select 
-                  value={awayTeam.id} 
-                  onChange={handleAwayTeamChange}
-                  style={{ borderColor: awayTeam.colors?.primary || '#333' }}
-                >
-                  {availableTeams.map(team => (
-                    <option key={`away-${team.id}`} value={team.id}>
-                      {team.name} ({team.season})
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
+            <button 
+              className={styles.navButton} 
+              onClick={() => changeTeam(1, 'away')}
+              aria-label="Next team"
+            >
+              ›
+            </button>
+          </div>
+        )}
+      </div>
+      
+      <div className={styles.matchupSection}>
+        <div className={styles.matchupHeader}>
+          <div className={styles.matchupTeam} style={{ color: homeTeam.colors?.primary }}>
+            {homeTeam.abbreviation}
+          </div>
+          <div className={styles.matchupLabel}>Matchup</div>
+          <div className={styles.matchupTeam} style={{ color: awayTeam.colors?.primary }}>
+            {awayTeam.abbreviation}
           </div>
         </div>
-      </div>
+        
+        <div className={styles.matchupContent}>
+          {['PG', 'SG', 'SF', 'PF', 'C'].map((position, index) => {
+            const homePlayerId = homeTeam.starting_lineup?.[index];
+            const awayPlayerId = awayTeam.starting_lineup?.[index];
+            const homePlayer = homeTeam.players?.[homePlayerId];
+            const awayPlayer = awayTeam.players?.[awayPlayerId];
 
-      <div className={styles.position_matchups}>
-        {['PG', 'SG', 'SF', 'PF', 'C'].map((position, index) => {
-          const homePlayerId = homeTeam.starting_lineup?.[index];
-          const awayPlayerId = awayTeam.starting_lineup?.[index];
-          const homePlayer = homeTeam.players?.[homePlayerId];
-          const awayPlayer = awayTeam.players?.[awayPlayerId];
-
-          return (
-            <div className={styles.position_row} key={position}>
-              <div className={`${styles.player_matchup} ${styles.home_player}`}>
-                {homePlayer ? (
-                  <>
-                    <div className={styles.player_details}>
-                      <div className={styles.player_name}>{getPlayerFirstName(homePlayer.player_name)}</div>
-                      <div className={`${styles.player_name} ${styles.player_last_name}`}>{getPlayerLastName(homePlayer.player_name)}</div>
+            return (
+              <div className={styles.positionRow} key={position}>
+                <div className={styles.playerCell}>
+                  {homePlayer ? (
+                    <div className={styles.playerInfo}>
+                      <div className={styles.playerNumber}>
+                        {homePlayer.jersey_number.toString().padStart(2, ' ')}
+                      </div>
+                      <div className={styles.playerName}>
+                        <div className={styles.playerLastName}>
+                          {getPlayerLastName(homePlayer.player_name)}
+                        </div>
+                        <div className={styles.playerFirstName}>
+                          {getPlayerFirstName(homePlayer.player_name)}
+                        </div>
+                      </div>
                     </div>
-                    <div className={styles.player_icon_container} style={{ borderColor: homeTeam.colors?.primary || '#333' }}>
-                      <img 
-                        src={getPlayerImagePath(homePlayer.player_name, homeTeam.name)}
-                        alt={homePlayer.player_name}
-                        className={styles.player_icon}
-                        onError={(e) => {
-                          e.target.src = "/assets/players/default.png";
-                        }}
-                      />
+                  ) : (
+                    <div className={styles.emptyPlayer}>-</div>
+                  )}
+                </div>
+                
+                <div className={styles.positionCell}>
+                  {position}
+                </div>
+                
+                <div className={styles.playerCell}>
+                  {awayPlayer ? (
+                    <div className={styles.playerInfo}>
+                      <div className={styles.playerNumber}>
+                        {awayPlayer.jersey_number.toString().padStart(2, ' ')}
+                      </div>
+                      <div className={styles.playerName}>
+                        <div className={styles.playerLastName}>
+                          {getPlayerLastName(awayPlayer.player_name)}
+                        </div>
+                        <div className={styles.playerFirstName}>
+                          {getPlayerFirstName(awayPlayer.player_name)}
+                        </div>
+                      </div>
                     </div>
-                  </>
-                ) : (
-                  <div className={styles.empty_player}>No Player</div>
-                )}
+                  ) : (
+                    <div className={styles.emptyPlayer}>-</div>
+                  )}
+                </div>
               </div>
-              
-              <div className={styles.position_indicator}>
-                {position}
-              </div>
-              
-              <div className={`${styles.player_matchup} ${styles.away_player}`}>
-                {awayPlayer ? (
-                  <>
-                    <div className={styles.player_icon_container} style={{ borderColor: awayTeam.colors?.primary || '#333' }}>
-                      <img 
-                        src={getPlayerImagePath(awayPlayer.player_name, awayTeam.name)}
-                        alt={awayPlayer.player_name}
-                        className={styles.player_icon}
-                        onError={(e) => {
-                          e.target.src = "/assets/players/default.png";
-                        }}
-                      />
-                    </div>
-                    <div className={`${styles.player_details}`}>
-                      <div className={styles.player_name}>{getPlayerFirstName(awayPlayer.player_name)}</div>
-                      <div className={`${styles.player_name} ${styles.player_last_name}`}>{getPlayerLastName(awayPlayer.player_name)}</div>
-                    </div>
-                  </>
-                ) : (
-                  <div className={styles.empty_player}>No Player</div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className={styles.simulation_options}>
-        <div className={styles.sim_buttons}>
-          <button 
-            className={`${styles.sim_button} ${styles.quick_sim}`}
-            onClick={() => handleStartSimulation('quick')}
-            style={getButtonStyle(awayTeam)}
-          >
-            Quick Simulation
-            <span className={styles.button_desc}>Skip to final results</span>
-          </button>
-          
-          <button 
-            className={`${styles.sim_button} ${styles.full_sim}`}
-            onClick={() => handleStartSimulation('full')}
-            style={getButtonStyle(homeTeam)}
-          >
-            Full Simulation
-            <span className={styles.button_desc}>Watch play-by-play action</span>
-          </button>
+            );
+          })}
         </div>
       </div>
+      
+      <div className={styles.actions}>
+        <button 
+          className={`${styles.actionButton} ${styles.quickSim}`}
+          onClick={() => handleStartSimulation('quick')}
+          style={{
+            backgroundColor: '#f5f5f7',
+            color: '#1d1d1f'
+          }}
+        >
+          Quick Simulation
+          <span className={styles.buttonDesc}>Skip to final results</span>
+        </button>
+        
+        <button 
+          className={`${styles.actionButton} ${styles.fullSim}`}
+          onClick={() => handleStartSimulation('full')}
+          style={{
+            backgroundColor: '#1d1d1f',
+            color: '#ffffff'
+          }}
+        >
+          Full Simulation
+          <span className={styles.buttonDesc}>Watch play-by-play action</span>
+        </button>
+      </div>
+      
       <Footer />
     </div>
   );
