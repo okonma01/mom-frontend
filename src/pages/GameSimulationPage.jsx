@@ -324,10 +324,12 @@ function GameSimulationPage() {
     const events = gameData.events;
     let endIndex = events.length - 1;
 
-    for (let i = 0; i < events.length; i++) {
-      if (events[i].event_type === "game_over") {
-        endIndex = i;
-        break;
+    if (events[endIndex].event_type !== "game_over") {
+      for (let i = 0; i < events.length; i++) {
+        if (events[i].event_type === "game_over") {
+          endIndex = i;
+          break;
+        }
       }
     }
 
@@ -398,7 +400,7 @@ function GameSimulationPage() {
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
-        backgroundAttachment: "fixed",
+        // backgroundAttachment: "fixed",
         backgroundBlendMode: "overlay",
       }}
     >

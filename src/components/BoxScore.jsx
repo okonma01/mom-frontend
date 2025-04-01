@@ -96,7 +96,7 @@ const TeamTable = memo(({ team, teamIndex, playerStats, starterIds }) => {
       // For bench players, sort by points for better UX
       const aStats = playerStats[aId] || {};
       const bStats = playerStats[bId] || {};
-      return (bStats.points || 0) - (aStats.points || 0);
+      return (bStats.minutes || 0) - (aStats.minutes || 0);
     });
   }, [team.players, starterIds, playerStats]);
   

@@ -60,7 +60,7 @@ function GameSummaryPage() {
 
   const finalStats = useMemo(() => {
     if (!gameData) return null;
-    // Find the game_over event to get final scores
+
     const gameOverEvent = gameData.events.find(
       (event) => event.event_type === "game_over"
     );
@@ -71,6 +71,7 @@ function GameSummaryPage() {
     let homeTotal = 0;
     let awayTotal = 0;
 
+    // Quarter scores calculation
     gameData.events
       .filter((event) => event.event_type === "quarter_end")
       .forEach((event) => {
@@ -86,30 +87,111 @@ function GameSummaryPage() {
         awayTotal = away_score;
       });
 
-    // Initialize default teamStats if they don't exist in the checkpoint
-    const defaultTeamStats = {
-      fieldGoalMade: 0,
-      fieldGoalAttempted: 0,
-      threePointMade: 0,
-      threePointAttempted: 0,
-      freeThrowsMade: 0,
-      freeThrowsAttempted: 0,
-      rebounds: 0,
-      assists: 0,
-      steals: 0,
-      blocks: 0,
-      turnovers: 0,
-      possessions: 0,
-      pace: 0,
-      ortg: 0,
-      drtg: 0,
+    // Initialize team stats with proper calculations
+    const calculateTeamStats = (teamId) => {
+      let stats = {
+        fieldGoalMade: 0,
+        fieldGoalAttempted: 0,
+        threePointMade: 0,
+        threePointAttempted: 0,
+        freeThrowsMade: 0,
+        freeThrowsAttempted: 0,
+        rebounds: 0,
+        assists: 0,
+        steals: 0,
+        blocks: 0,
+        turnovers: 0,
+        possessions: 0,
+      };
+
+      // Count all events to calculate stats
+      gameData.events.forEach(event => {
+        if (event.team_id === teamId) {
+          switch (event.event_type) {
+            case 'shot_made':
+              stats.fieldGoalMade++;
+              stats.fieldGoalAttempted++;
+              if (event.details?.shot_type === 'fga_threepoint') {
+                stats.threePointMade++;
+                stats.threePointAttempted++;
+              }
+              if (event.details?.assist_player_id) {
+                stats.assists++;
+              }
+              break;
+            case 'shot_missed':
+              stats.fieldGoalAttempted++;
+              if (event.details?.shot_type === 'fga_threepoint') {
+                stats.threePointAttempted++;
+              }
+              break;
+            case 'free_throw':
+              if (event.details?.made) {
+                stats.freeThrowsMade++;
+              }
+              stats.freeThrowsAttempted++;
+              break;
+            case 'rebound':
+              stats.rebounds++;
+              break;
+            case 'block':
+              stats.blocks++;
+              break;
+            case 'turnover':
+              stats.turnovers++;
+              break;
+          }
+        }
+      });
+
+      // Calculate possessions using the NBA formula:
+      // Possessions = FGA + (0.44 * FTA) - OREB + TOV
+      stats.possessions = (stats.fieldGoalAttempted + 
+        (0.44 * stats.freeThrowsAttempted) - 
+        (stats.rebounds * 0.25) + 
+        stats.turnovers).toFixed(1);
+
+      // Calculate pace (possessions per game normalized to 48 minutes)
+      const totalMinutes = 48; // Standard game length
+      stats.pace = Math.round((stats.possessions * (48 / totalMinutes)) * 10) / 10;
+
+      // Calculate Offensive Rating (points per 100 possessions)
+      const points = teamId === 0 ? gameOverEvent.details.home_score : gameOverEvent.details.away_score;
+      stats.ortg = Math.round((points / stats.possessions) * 100);
+
+      // Calculate Defensive Rating (opponent points per 100 possessions)
+      const oppPoints = teamId === 0 ? gameOverEvent.details.away_score : gameOverEvent.details.home_score;
+      stats.drtg = Math.round((oppPoints / stats.possessions) * 100);
+
+      // Calculate Effective Field Goal Percentage (eFG%)
+      // eFG% = (FGM + 0.5 * 3PM) / FGA
+      stats.efg = stats.fieldGoalAttempted > 0 
+        ? Math.round(((stats.fieldGoalMade + 0.5 * stats.threePointMade) / stats.fieldGoalAttempted) * 1000) / 10
+        : 0;
+
+      // Calculate True Shooting Percentage (TS%)
+      // TS% = Points / (2 * (FGA + 0.44 * FTA))
+      stats.ts = (stats.fieldGoalAttempted > 0 || stats.freeThrowsAttempted > 0)
+        ? Math.round((points / (2 * (stats.fieldGoalAttempted + 0.44 * stats.freeThrowsAttempted))) * 1000) / 10
+        : 0;
+
+      // Calculate Assist Ratio (percentage of possessions ending in assist)
+      // AST_Ratio = (AST * 100) / Possessions
+      stats.astRatio = stats.possessions > 0
+        ? Math.round((stats.assists / stats.possessions) * 1000) / 10
+        : 0;
+
+      return stats;
     };
 
-    // Ensure teamStats exists with proper structure
+    // Calculate stats for both teams
     const teamStats = {
-      home: { ...defaultTeamStats, ...(lastCheckpoint?.team_stats?.home || {}) },
-      away: { ...defaultTeamStats, ...(lastCheckpoint?.team_stats?.away || {}) },
+      home: calculateTeamStats(0),
+      away: calculateTeamStats(1)
     };
+
+    teamStats.home.steals = teamStats.away.turnovers || 0;
+    teamStats.away.steals = teamStats.home.turnovers || 0;
 
     return {
       homeScore: gameOverEvent.details.home_score,
@@ -120,39 +202,37 @@ function GameSummaryPage() {
     };
   }, [gameData]);
 
-  // Format player stats for BoxScore component
+  // Extract player stats from the game_over event
   const formattedPlayerStats = useMemo(() => {
-    if (!finalStats || !finalStats.playerStats || !gameData) return {};
-
-    const formattedStats = {};
-
-    // Process each player's stats from the checkpoint data
-    gameData.game_info.teams.forEach((team) => {
-      team.players.forEach((player) => {
-        const playerId = player.player_id || `p${player.player_index}`;
-        if (finalStats.playerStats[playerId]) {
-          const playerState = finalStats.playerStats[playerId];
-
-          // Calculate shooting percentages for display
-          const fgAttempted = playerState.fieldGoalAttempted || 0;
-          const fgMade = playerState.fieldGoalMade || 0;
-          const tpAttempted = playerState.threePointAttempted || 0;
-          const tpMade = playerState.threePointMade || 0;
-          const ftAttempted = playerState.freeThrowsAttempted || 0;
-          const ftMade = playerState.freeThrowsMade || 0;
-
-          formattedStats[playerId] = {
-            ...playerState,
-            fgPct: fgAttempted > 0 ? ((fgMade / fgAttempted) * 100).toFixed(1) : "0.0",
-            tpPct: tpAttempted > 0 ? ((tpMade / tpAttempted) * 100).toFixed(1) : "0.0",
-            ftPct: ftAttempted > 0 ? ((ftMade / ftAttempted) * 100).toFixed(1) : "0.0",
-          };
-        }
-      });
+    if (!gameData || !gameData.events) return {};
+    
+    // Find the game_over event
+    const gameOverEvent = gameData.events.find(event => event.event_type === "game_over");
+    
+    if (!gameOverEvent || !gameOverEvent.details.player_states) return {};
+    
+    // Format player stats from player_states
+    const playerStats = {};
+    Object.entries(gameOverEvent.details.player_states).forEach(([playerId, stats]) => {
+      playerStats[playerId] = {
+        points: stats.pts || 0,
+        rebounds: (stats.orb + stats.drb) || 0,
+        assists: stats.ast || 0,
+        steals: stats.stl || 0,
+        blocks: stats.blk || 0,
+        turnovers: stats.tov || 0,
+        minutes: stats.mp || 0,
+        fieldGoalMade: stats.fg || 0,
+        fieldGoalAttempted: stats.fga || 0,
+        threePointMade: stats.fg_threepoint || 0,
+        threePointAttempted: stats.fga_threepoint || 0,
+        freeThrowsMade: stats.ft || 0,
+        freeThrowsAttempted: stats.fta || 0
+      };
     });
-
-    return formattedStats;
-  }, [finalStats, gameData]);
+    
+    return playerStats;
+  }, [gameData]);
 
   // Helper function to determine which team has better stats in a category
   const getBetterTeam = (home, away) => {
@@ -199,6 +279,11 @@ function GameSummaryPage() {
       className={styles.game_summary_container}
       style={{
         backgroundImage: backgroundImage ? `url(${getAssetPath(backgroundImage)})` : undefined,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        // backgroundAttachment: "fixed",
+        backgroundBlendMode: "overlay",
       }}
     >
       <div className={styles.final_score_banner}>
@@ -824,6 +909,108 @@ function GameSummaryPage() {
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.drtg}
+                      </div>
+                    </div>
+
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.efg,
+                              finalStats.teamStats.away.efg
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.efg}%
+                      </div>
+                      <div className={styles.stat_name}>Effective FG%</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.efg,
+                              finalStats.teamStats.home.efg
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.efg}%
+                      </div>
+                    </div>
+
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.ts,
+                              finalStats.teamStats.away.ts
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.ts}%
+                      </div>
+                      <div className={styles.stat_name}>True Shooting%</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.ts,
+                              finalStats.teamStats.home.ts
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.ts}%
+                      </div>
+                    </div>
+
+                    <div className={styles.stat_row}>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.home_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.home.astRatio,
+                              finalStats.teamStats.away.astRatio
+                            ) === "home",
+                          }
+                        )}
+                        style={{ color: homeColors?.primary }}
+                      >
+                        {finalStats.teamStats.home.astRatio}%
+                      </div>
+                      <div className={styles.stat_name}>Assist Ratio</div>
+                      <div
+                        className={cx(
+                          styles.team_stat,
+                          styles.away_stat,
+                          {
+                            [styles.stat_winner]: getBetterTeam(
+                              finalStats.teamStats.away.astRatio,
+                              finalStats.teamStats.home.astRatio
+                            ) === "away",
+                          }
+                        )}
+                        style={{ color: awayColors?.primary }}
+                      >
+                        {finalStats.teamStats.away.astRatio}%
                       </div>
                     </div>
                   </>

@@ -40,7 +40,7 @@ const getPlayerImagePath = (playerId, gameInfo) => {
 };
 
 // Memoize the event description component to prevent unnecessary re-renders
-const EventDescription = memo(({ event, getPlayerName }) => {
+const EventDescription = memo(({ event, getPlayerName, gameInfo }) => {
   const playerName = getPlayerName(event.player_id);
 
   switch (event.event_type) {
@@ -110,7 +110,7 @@ const EventDescription = memo(({ event, getPlayerName }) => {
     case 'quarter_end':
       return (
         <span className={styles.period_marker}>
-          End of Quarter {event.details.quarter}
+          End of Q{event.details.quarter}
         </span>
       );
     
@@ -118,13 +118,11 @@ const EventDescription = memo(({ event, getPlayerName }) => {
       const winningTeamId = event.details.home_score > event.details.away_score ? 0 : 1;
       const winningScore = Math.max(event.details.home_score, event.details.away_score);
       const losingScore = Math.min(event.details.home_score, event.details.away_score);
-      const winningTeam = event.team_id !== undefined ? 
-        (winningTeamId === 0 ? event.teams?.[0]?.team_name : event.teams?.[1]?.team_name) : 
-        'Home Team';
-      
+      const winningTeam = gameInfo?.teams?.[winningTeamId]?.team_name || 'Home Team';
+
       return (
         <span className={styles.period_marker}>
-          GAME OVER - {winningTeam} wins {winningScore}-{losingScore}
+          Game Over - {winningTeam} win {winningScore}-{losingScore}
         </span>
       );
     
@@ -193,7 +191,7 @@ const EventItem = memo(({ event, index, getPlayerName, getTeamInfo, gameInfo }) 
         {teamShortName}
       </div>
       <div className={styles.event_description}>
-        <EventDescription event={event} getPlayerName={getPlayerName} />
+        <EventDescription event={event} getPlayerName={getPlayerName} gameInfo={gameInfo} />
       </div>
     </div>
   );
