@@ -200,3 +200,24 @@ export const getCourtImagePath = (teamName) => {
   
   return `/assets/courts/${baseTeamName}.jpg`;
 };
+
+export const getTeamDefaultImagePath = (playerId, gameInfo) => {
+  let teamName = "";
+
+  for (const team of gameInfo?.teams || []) {
+    for (const player of team?.players || []) {
+      if (player.player_id === playerId) {
+        teamName = team.team_name;
+        break;
+      }
+    }
+    if (teamName) break;
+  }
+
+  const formattedTeamName = teamName ? 
+    teamName.split(" ").pop().toLowerCase().replace(/\d+/g, '') : "";
+  
+  return formattedTeamName ? 
+    `/assets/player icons/${formattedTeamName}/default.png` :
+    `/assets/player icons/default.png`;
+};

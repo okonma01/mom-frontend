@@ -10,6 +10,8 @@ import {
 import Footer from "../components/Footer";
 import BoxScore from "../components/BoxScore";
 import cx from "classnames";
+import { fetchGameData } from "../utils/api";
+
 
 function GameSummaryPage() {
   const { gameId } = useParams();
@@ -21,13 +23,13 @@ function GameSummaryPage() {
   const [backgroundImage, setBackgroundImage] = useState(null);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchGame = async () => {
       try {
-        const response = await fetch(getAssetPath(`game_${gameId}.json`));
-        if (!response.ok) {
-          throw new Error("Game data not found");
-        }
-        const data = await response.json();
+        setLoading(true);
+        // Replace direct fetch with the API utility function
+        const data = await fetchGameData(gameId, controller.signal);
         setGameData(data);
 
         // Set background image based on home team
@@ -38,12 +40,18 @@ function GameSummaryPage() {
 
         setLoading(false);
       } catch (error) {
-        console.error("Error loading game summary data:", error);
-        setError(error.message || "Failed to load game data");
-        setLoading(false);
+        if (error.name !== "AbortError") {
+          console.error("Error loading game summary data:", error);
+          setError(error.message || "Failed to load game data");
+          setLoading(false);
+        }
       }
     };
+
     fetchGame();
+
+    // Cleanup function to abort fetch when component unmounts
+    return () => controller.abort();
   }, [gameId]);
 
   const handlePlayAgain = () => {
@@ -66,7 +74,8 @@ function GameSummaryPage() {
     );
     if (!gameOverEvent) return null;
 
-    const lastCheckpoint = gameData.checkpoints[gameData.checkpoints.length - 1];
+    const lastCheckpoint =
+      gameData.checkpoints[gameData.checkpoints.length - 1];
     const quarterScores = [];
     let homeTotal = 0;
     let awayTotal = 0;
@@ -105,13 +114,13 @@ function GameSummaryPage() {
       };
 
       // Count all events to calculate stats
-      gameData.events.forEach(event => {
+      gameData.events.forEach((event) => {
         if (event.team_id === teamId) {
           switch (event.event_type) {
-            case 'shot_made':
+            case "shot_made":
               stats.fieldGoalMade++;
               stats.fieldGoalAttempted++;
-              if (event.details?.shot_type === 'fga_threepoint') {
+              if (event.details?.shot_type === "fga_threepoint") {
                 stats.threePointMade++;
                 stats.threePointAttempted++;
               }
@@ -119,25 +128,25 @@ function GameSummaryPage() {
                 stats.assists++;
               }
               break;
-            case 'shot_missed':
+            case "shot_missed":
               stats.fieldGoalAttempted++;
-              if (event.details?.shot_type === 'fga_threepoint') {
+              if (event.details?.shot_type === "fga_threepoint") {
                 stats.threePointAttempted++;
               }
               break;
-            case 'free_throw':
+            case "free_throw":
               if (event.details?.made) {
                 stats.freeThrowsMade++;
               }
               stats.freeThrowsAttempted++;
               break;
-            case 'rebound':
+            case "rebound":
               stats.rebounds++;
               break;
-            case 'block':
+            case "block":
               stats.blocks++;
               break;
-            case 'turnover':
+            case "turnover":
               stats.turnovers++;
               break;
           }
@@ -146,40 +155,62 @@ function GameSummaryPage() {
 
       // Calculate possessions using the NBA formula:
       // Possessions = FGA + (0.44 * FTA) - OREB + TOV
-      stats.possessions = (stats.fieldGoalAttempted + 
-        (0.44 * stats.freeThrowsAttempted) - 
-        (stats.rebounds * 0.25) + 
-        stats.turnovers).toFixed(1);
+      stats.possessions = (
+        stats.fieldGoalAttempted +
+        0.44 * stats.freeThrowsAttempted -
+        stats.rebounds * 0.25 +
+        stats.turnovers
+      ).toFixed(1);
 
       // Calculate pace (possessions per game normalized to 48 minutes)
       const totalMinutes = 48; // Standard game length
-      stats.pace = Math.round((stats.possessions * (48 / totalMinutes)) * 10) / 10;
+      stats.pace =
+        Math.round(stats.possessions * (48 / totalMinutes) * 10) / 10;
 
       // Calculate Offensive Rating (points per 100 possessions)
-      const points = teamId === 0 ? gameOverEvent.details.home_score : gameOverEvent.details.away_score;
+      const points =
+        teamId === 0
+          ? gameOverEvent.details.home_score
+          : gameOverEvent.details.away_score;
       stats.ortg = Math.round((points / stats.possessions) * 100);
 
       // Calculate Defensive Rating (opponent points per 100 possessions)
-      const oppPoints = teamId === 0 ? gameOverEvent.details.away_score : gameOverEvent.details.home_score;
+      const oppPoints =
+        teamId === 0
+          ? gameOverEvent.details.away_score
+          : gameOverEvent.details.home_score;
       stats.drtg = Math.round((oppPoints / stats.possessions) * 100);
 
       // Calculate Effective Field Goal Percentage (eFG%)
       // eFG% = (FGM + 0.5 * 3PM) / FGA
-      stats.efg = stats.fieldGoalAttempted > 0 
-        ? Math.round(((stats.fieldGoalMade + 0.5 * stats.threePointMade) / stats.fieldGoalAttempted) * 1000) / 10
-        : 0;
+      stats.efg =
+        stats.fieldGoalAttempted > 0
+          ? Math.round(
+              ((stats.fieldGoalMade + 0.5 * stats.threePointMade) /
+                stats.fieldGoalAttempted) *
+                1000
+            ) / 10
+          : 0;
 
       // Calculate True Shooting Percentage (TS%)
       // TS% = Points / (2 * (FGA + 0.44 * FTA))
-      stats.ts = (stats.fieldGoalAttempted > 0 || stats.freeThrowsAttempted > 0)
-        ? Math.round((points / (2 * (stats.fieldGoalAttempted + 0.44 * stats.freeThrowsAttempted))) * 1000) / 10
-        : 0;
+      stats.ts =
+        stats.fieldGoalAttempted > 0 || stats.freeThrowsAttempted > 0
+          ? Math.round(
+              (points /
+                (2 *
+                  (stats.fieldGoalAttempted +
+                    0.44 * stats.freeThrowsAttempted))) *
+                1000
+            ) / 10
+          : 0;
 
       // Calculate Assist Ratio (percentage of possessions ending in assist)
       // AST_Ratio = (AST * 100) / Possessions
-      stats.astRatio = stats.possessions > 0
-        ? Math.round((stats.assists / stats.possessions) * 1000) / 10
-        : 0;
+      stats.astRatio =
+        stats.possessions > 0
+          ? Math.round((stats.assists / stats.possessions) * 1000) / 10
+          : 0;
 
       return stats;
     };
@@ -187,7 +218,7 @@ function GameSummaryPage() {
     // Calculate stats for both teams
     const teamStats = {
       home: calculateTeamStats(0),
-      away: calculateTeamStats(1)
+      away: calculateTeamStats(1),
     };
 
     teamStats.home.steals = teamStats.away.turnovers || 0;
@@ -205,32 +236,36 @@ function GameSummaryPage() {
   // Extract player stats from the game_over event
   const formattedPlayerStats = useMemo(() => {
     if (!gameData || !gameData.events) return {};
-    
+
     // Find the game_over event
-    const gameOverEvent = gameData.events.find(event => event.event_type === "game_over");
-    
+    const gameOverEvent = gameData.events.find(
+      (event) => event.event_type === "game_over"
+    );
+
     if (!gameOverEvent || !gameOverEvent.details.player_states) return {};
-    
+
     // Format player stats from player_states
     const playerStats = {};
-    Object.entries(gameOverEvent.details.player_states).forEach(([playerId, stats]) => {
-      playerStats[playerId] = {
-        points: stats.pts || 0,
-        rebounds: (stats.orb + stats.drb) || 0,
-        assists: stats.ast || 0,
-        steals: stats.stl || 0,
-        blocks: stats.blk || 0,
-        turnovers: stats.tov || 0,
-        minutes: stats.mp || 0,
-        fieldGoalMade: stats.fg || 0,
-        fieldGoalAttempted: stats.fga || 0,
-        threePointMade: stats.fg_threepoint || 0,
-        threePointAttempted: stats.fga_threepoint || 0,
-        freeThrowsMade: stats.ft || 0,
-        freeThrowsAttempted: stats.fta || 0
-      };
-    });
-    
+    Object.entries(gameOverEvent.details.player_states).forEach(
+      ([playerId, stats]) => {
+        playerStats[playerId] = {
+          points: stats.pts || 0,
+          rebounds: stats.orb + stats.drb || 0,
+          assists: stats.ast || 0,
+          steals: stats.stl || 0,
+          blocks: stats.blk || 0,
+          turnovers: stats.tov || 0,
+          minutes: Math.round(stats.mp / 60) || 0,
+          fieldGoalMade: stats.fg || 0,
+          fieldGoalAttempted: stats.fga || 0,
+          threePointMade: stats.fg_threepoint || 0,
+          threePointAttempted: stats.fga_threepoint || 0,
+          freeThrowsMade: stats.ft || 0,
+          freeThrowsAttempted: stats.fta || 0,
+        };
+      }
+    );
+
     return playerStats;
   }, [gameData]);
 
@@ -278,7 +313,9 @@ function GameSummaryPage() {
     <div
       className={styles.game_summary_container}
       style={{
-        backgroundImage: backgroundImage ? `url(${getAssetPath(backgroundImage)})` : undefined,
+        backgroundImage: backgroundImage
+          ? `url(${getAssetPath(backgroundImage)})`
+          : undefined,
         backgroundSize: "cover",
         backgroundPosition: "center",
         backgroundRepeat: "no-repeat",
@@ -294,7 +331,7 @@ function GameSummaryPage() {
             className={styles.team_logo}
           />
         </div>
-        
+
         <div className={styles.team_info}>
           <div
             className={styles.team_name}
@@ -304,15 +341,15 @@ function GameSummaryPage() {
           </div>
           <div className={styles.team_record}>{homeTeam.record || "0-0"}</div>
         </div>
-        
+
         <div className={styles.score_display}>
           <div className={styles.final_text}>Final</div>
           <div className={styles.scores}>
             <div
               className={styles.score_value}
-              style={{ 
+              style={{
                 color: winner === "home" ? homeColors?.primary : "#1d1d1f",
-                opacity: winner === "home" ? 1 : 0.8
+                opacity: winner === "home" ? 1 : 0.8,
               }}
             >
               {finalStats.homeScore}
@@ -320,9 +357,9 @@ function GameSummaryPage() {
             <div className={styles.score_separator}>-</div>
             <div
               className={styles.score_value}
-              style={{ 
+              style={{
                 color: winner === "away" ? awayColors?.primary : "#1d1d1f",
-                opacity: winner === "away" ? 1 : 0.8
+                opacity: winner === "away" ? 1 : 0.8,
               }}
             >
               {finalStats.awayScore}
@@ -334,7 +371,7 @@ function GameSummaryPage() {
             </div>
           )}
         </div>
-        
+
         <div className={styles.team_info} style={{ textAlign: "right" }}>
           <div
             className={styles.team_name}
@@ -344,7 +381,7 @@ function GameSummaryPage() {
           </div>
           <div className={styles.team_record}>{awayTeam.record || "0-0"}</div>
         </div>
-        
+
         <div className={styles.team_logo_container}>
           <img
             src={getAssetPath(getTeamLogoPath(awayTeam.team_name))}
@@ -356,19 +393,25 @@ function GameSummaryPage() {
 
       <div className={styles.tabs}>
         <button
-          className={cx(styles.tab, { [styles.active]: activeTab === "summary" })}
+          className={cx(styles.tab, {
+            [styles.active]: activeTab === "summary",
+          })}
           onClick={() => handleTabChange("summary")}
         >
           Game Summary
         </button>
         <button
-          className={cx(styles.tab, { [styles.active]: activeTab === "boxscore" })}
+          className={cx(styles.tab, {
+            [styles.active]: activeTab === "boxscore",
+          })}
           onClick={() => handleTabChange("boxscore")}
         >
           Box Score
         </button>
         <button
-          className={cx(styles.tab, { [styles.active]: activeTab === "advanced" })}
+          className={cx(styles.tab, {
+            [styles.active]: activeTab === "advanced",
+          })}
           onClick={() => handleTabChange("advanced")}
         >
           Advanced Stats
@@ -404,7 +447,8 @@ function GameSummaryPage() {
                     <td
                       className={styles.final_score_cell}
                       style={{
-                        color: winner === "home" ? homeColors?.primary : "#212529",
+                        color:
+                          winner === "home" ? homeColors?.primary : "#212529",
                         fontWeight: winner === "home" ? "700" : "600",
                       }}
                     >
@@ -424,7 +468,8 @@ function GameSummaryPage() {
                     <td
                       className={styles.final_score_cell}
                       style={{
-                        color: winner === "away" ? awayColors?.primary : "#212529",
+                        color:
+                          winner === "away" ? awayColors?.primary : "#212529",
                         fontWeight: winner === "away" ? "700" : "600",
                       }}
                     >
@@ -442,47 +487,65 @@ function GameSummaryPage() {
                   <>
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.fieldGoalMade /
-                                Math.max(1, finalStats.teamStats.home.fieldGoalAttempted),
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.home.fieldGoalAttempted
+                                ),
                               finalStats.teamStats.away.fieldGoalMade /
-                                Math.max(1, finalStats.teamStats.away.fieldGoalAttempted)
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.away.fieldGoalAttempted
+                                )
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
-                        {finalStats.teamStats.home.fieldGoalMade}/{finalStats.teamStats.home.fieldGoalAttempted}
+                        {finalStats.teamStats.home.fieldGoalMade}/
+                        {finalStats.teamStats.home.fieldGoalAttempted}
                         <div className={styles.stat_percent}>
                           {finalStats.teamStats.home.fieldGoalAttempted > 0
-                            ? `${((finalStats.teamStats.home.fieldGoalMade / finalStats.teamStats.home.fieldGoalAttempted) * 100).toFixed(1)}%`
+                            ? `${(
+                                (finalStats.teamStats.home.fieldGoalMade /
+                                  finalStats.teamStats.home
+                                    .fieldGoalAttempted) *
+                                100
+                              ).toFixed(1)}%`
                             : "0.0%"}
                         </div>
                       </div>
                       <div className={styles.stat_name}>Field Goals</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.fieldGoalMade /
-                                Math.max(1, finalStats.teamStats.away.fieldGoalAttempted),
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.away.fieldGoalAttempted
+                                ),
                               finalStats.teamStats.home.fieldGoalMade /
-                                Math.max(1, finalStats.teamStats.home.fieldGoalAttempted)
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.home.fieldGoalAttempted
+                                )
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
-                        {finalStats.teamStats.away.fieldGoalMade}/{finalStats.teamStats.away.fieldGoalAttempted}
+                        {finalStats.teamStats.away.fieldGoalMade}/
+                        {finalStats.teamStats.away.fieldGoalAttempted}
                         <div className={styles.stat_percent}>
                           {finalStats.teamStats.away.fieldGoalAttempted > 0
-                            ? `${((finalStats.teamStats.away.fieldGoalMade / finalStats.teamStats.away.fieldGoalAttempted) * 100).toFixed(1)}%`
+                            ? `${(
+                                (finalStats.teamStats.away.fieldGoalMade /
+                                  finalStats.teamStats.away
+                                    .fieldGoalAttempted) *
+                                100
+                              ).toFixed(1)}%`
                             : "0.0%"}
                         </div>
                       </div>
@@ -490,47 +553,65 @@ function GameSummaryPage() {
 
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.threePointMade /
-                                Math.max(1, finalStats.teamStats.home.threePointAttempted),
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.home.threePointAttempted
+                                ),
                               finalStats.teamStats.away.threePointMade /
-                                Math.max(1, finalStats.teamStats.away.threePointAttempted)
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.away.threePointAttempted
+                                )
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
-                        {finalStats.teamStats.home.threePointMade}/{finalStats.teamStats.home.threePointAttempted}
+                        {finalStats.teamStats.home.threePointMade}/
+                        {finalStats.teamStats.home.threePointAttempted}
                         <div className={styles.stat_percent}>
                           {finalStats.teamStats.home.threePointAttempted > 0
-                            ? `${((finalStats.teamStats.home.threePointMade / finalStats.teamStats.home.threePointAttempted) * 100).toFixed(1)}%`
+                            ? `${(
+                                (finalStats.teamStats.home.threePointMade /
+                                  finalStats.teamStats.home
+                                    .threePointAttempted) *
+                                100
+                              ).toFixed(1)}%`
                             : "0.0%"}
                         </div>
                       </div>
                       <div className={styles.stat_name}>3-Pointers</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.threePointMade /
-                                Math.max(1, finalStats.teamStats.away.threePointAttempted),
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.away.threePointAttempted
+                                ),
                               finalStats.teamStats.home.threePointMade /
-                                Math.max(1, finalStats.teamStats.home.threePointAttempted)
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.home.threePointAttempted
+                                )
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
-                        {finalStats.teamStats.away.threePointMade}/{finalStats.teamStats.away.threePointAttempted}
+                        {finalStats.teamStats.away.threePointMade}/
+                        {finalStats.teamStats.away.threePointAttempted}
                         <div className={styles.stat_percent}>
                           {finalStats.teamStats.away.threePointAttempted > 0
-                            ? `${((finalStats.teamStats.away.threePointMade / finalStats.teamStats.away.threePointAttempted) * 100).toFixed(1)}%`
+                            ? `${(
+                                (finalStats.teamStats.away.threePointMade /
+                                  finalStats.teamStats.away
+                                    .threePointAttempted) *
+                                100
+                              ).toFixed(1)}%`
                             : "0.0%"}
                         </div>
                       </div>
@@ -538,47 +619,65 @@ function GameSummaryPage() {
 
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.freeThrowsMade /
-                                Math.max(1, finalStats.teamStats.home.freeThrowsAttempted),
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.home.freeThrowsAttempted
+                                ),
                               finalStats.teamStats.away.freeThrowsMade /
-                                Math.max(1, finalStats.teamStats.away.freeThrowsAttempted)
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.away.freeThrowsAttempted
+                                )
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
-                        {finalStats.teamStats.home.freeThrowsMade}/{finalStats.teamStats.home.freeThrowsAttempted}
+                        {finalStats.teamStats.home.freeThrowsMade}/
+                        {finalStats.teamStats.home.freeThrowsAttempted}
                         <div className={styles.stat_percent}>
                           {finalStats.teamStats.home.freeThrowsAttempted > 0
-                            ? `${((finalStats.teamStats.home.freeThrowsMade / finalStats.teamStats.home.freeThrowsAttempted) * 100).toFixed(1)}%`
+                            ? `${(
+                                (finalStats.teamStats.home.freeThrowsMade /
+                                  finalStats.teamStats.home
+                                    .freeThrowsAttempted) *
+                                100
+                              ).toFixed(1)}%`
                             : "0.0%"}
                         </div>
                       </div>
                       <div className={styles.stat_name}>Free Throws</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.freeThrowsMade /
-                                Math.max(1, finalStats.teamStats.away.freeThrowsAttempted),
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.away.freeThrowsAttempted
+                                ),
                               finalStats.teamStats.home.freeThrowsMade /
-                                Math.max(1, finalStats.teamStats.home.freeThrowsAttempted)
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.home.freeThrowsAttempted
+                                )
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
-                        {finalStats.teamStats.away.freeThrowsMade}/{finalStats.teamStats.away.freeThrowsAttempted}
+                        {finalStats.teamStats.away.freeThrowsMade}/
+                        {finalStats.teamStats.away.freeThrowsAttempted}
                         <div className={styles.stat_percent}>
                           {finalStats.teamStats.away.freeThrowsAttempted > 0
-                            ? `${((finalStats.teamStats.away.freeThrowsMade / finalStats.teamStats.away.freeThrowsAttempted) * 100).toFixed(1)}%`
+                            ? `${(
+                                (finalStats.teamStats.away.freeThrowsMade /
+                                  finalStats.teamStats.away
+                                    .freeThrowsAttempted) *
+                                100
+                              ).toFixed(1)}%`
                             : "0.0%"}
                         </div>
                       </div>
@@ -586,32 +685,26 @@ function GameSummaryPage() {
 
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.rebounds,
                               finalStats.teamStats.away.rebounds
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
                         {finalStats.teamStats.home.rebounds}
                       </div>
                       <div className={styles.stat_name}>Rebounds</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.rebounds,
                               finalStats.teamStats.home.rebounds
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.rebounds}
@@ -620,32 +713,26 @@ function GameSummaryPage() {
 
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.assists,
                               finalStats.teamStats.away.assists
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
                         {finalStats.teamStats.home.assists}
                       </div>
                       <div className={styles.stat_name}>Assists</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.assists,
                               finalStats.teamStats.home.assists
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.assists}
@@ -654,32 +741,26 @@ function GameSummaryPage() {
 
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.steals,
                               finalStats.teamStats.away.steals
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
                         {finalStats.teamStats.home.steals}
                       </div>
                       <div className={styles.stat_name}>Steals</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.steals,
                               finalStats.teamStats.home.steals
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.steals}
@@ -688,32 +769,26 @@ function GameSummaryPage() {
 
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.blocks,
                               finalStats.teamStats.away.blocks
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
                         {finalStats.teamStats.home.blocks}
                       </div>
                       <div className={styles.stat_name}>Blocks</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.blocks,
                               finalStats.teamStats.home.blocks
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.blocks}
@@ -722,32 +797,26 @@ function GameSummaryPage() {
 
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.turnovers,
                               finalStats.teamStats.home.turnovers
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
                         {finalStats.teamStats.home.turnovers}
                       </div>
                       <div className={styles.stat_name}>Turnovers</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.turnovers,
                               finalStats.teamStats.away.turnovers
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.turnovers}
@@ -778,100 +847,98 @@ function GameSummaryPage() {
                   <>
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
-                              finalStats.homeScore / Math.max(1, finalStats.teamStats.home.possessions),
-                              finalStats.awayScore / Math.max(1, finalStats.teamStats.away.possessions)
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
+                              finalStats.homeScore /
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.home.possessions
+                                ),
+                              finalStats.awayScore /
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.away.possessions
+                                )
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
                         {finalStats.teamStats.home.possessions}
                       </div>
                       <div className={styles.stat_name}>Possessions</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
-                              finalStats.awayScore / Math.max(1, finalStats.teamStats.away.possessions),
-                              finalStats.homeScore / Math.max(1, finalStats.teamStats.home.possessions)
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
+                              finalStats.awayScore /
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.away.possessions
+                                ),
+                              finalStats.homeScore /
+                                Math.max(
+                                  1,
+                                  finalStats.teamStats.home.possessions
+                                )
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.possessions}
                       </div>
                     </div>
 
-                    <div className={styles.stat_row}>
+                    {/* <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.pace,
                               finalStats.teamStats.away.pace
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
                         {finalStats.teamStats.home.pace}
                       </div>
                       <div className={styles.stat_name}>Pace</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.pace,
                               finalStats.teamStats.home.pace
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.pace}
                       </div>
-                    </div>
+                    </div> */}
 
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.ortg,
                               finalStats.teamStats.away.ortg
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
                         {finalStats.teamStats.home.ortg}
                       </div>
                       <div className={styles.stat_name}>Offensive Rating</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.ortg,
                               finalStats.teamStats.home.ortg
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.ortg}
@@ -880,32 +947,26 @@ function GameSummaryPage() {
 
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.drtg,
                               finalStats.teamStats.home.drtg
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
                         {finalStats.teamStats.home.drtg}
                       </div>
                       <div className={styles.stat_name}>Defensive Rating</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.drtg,
                               finalStats.teamStats.away.drtg
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.drtg}
@@ -914,32 +975,26 @@ function GameSummaryPage() {
 
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.efg,
                               finalStats.teamStats.away.efg
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
                         {finalStats.teamStats.home.efg}%
                       </div>
                       <div className={styles.stat_name}>Effective FG%</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.efg,
                               finalStats.teamStats.home.efg
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.efg}%
@@ -948,32 +1003,26 @@ function GameSummaryPage() {
 
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.ts,
                               finalStats.teamStats.away.ts
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
                         {finalStats.teamStats.home.ts}%
                       </div>
                       <div className={styles.stat_name}>True Shooting%</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.ts,
                               finalStats.teamStats.home.ts
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.ts}%
@@ -982,32 +1031,26 @@ function GameSummaryPage() {
 
                     <div className={styles.stat_row}>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.home_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.home_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.home.astRatio,
                               finalStats.teamStats.away.astRatio
                             ) === "home",
-                          }
-                        )}
+                        })}
                         style={{ color: homeColors?.primary }}
                       >
                         {finalStats.teamStats.home.astRatio}%
                       </div>
                       <div className={styles.stat_name}>Assist Ratio</div>
                       <div
-                        className={cx(
-                          styles.team_stat,
-                          styles.away_stat,
-                          {
-                            [styles.stat_winner]: getBetterTeam(
+                        className={cx(styles.team_stat, styles.away_stat, {
+                          [styles.stat_winner]:
+                            getBetterTeam(
                               finalStats.teamStats.away.astRatio,
                               finalStats.teamStats.home.astRatio
                             ) === "away",
-                          }
-                        )}
+                        })}
                         style={{ color: awayColors?.primary }}
                       >
                         {finalStats.teamStats.away.astRatio}%

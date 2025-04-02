@@ -1,4 +1,4 @@
-// Load teams from teams.json file
+const API_BASE_URL = 'http://localhost:5000/api';
 
 // Function to fetch teams from the JSON file
 export const fetchTeams = async () => {
@@ -49,40 +49,34 @@ export const fetchTeams = async () => {
   }
 };
 
-// Additional functions to work with the team data
-export const getPlayersByTeam = async (teamId) => {
+export const simulateGame = async (homeTeamId, awayTeamId) => {
   try {
-    const response = await fetch('/assets/teams.json');
-    if (!response.ok) {
-      throw new Error('Failed to fetch teams data');
-    }
+    console.log("Sending data:", { homeTeamId, awayTeamId }); // Debug output
+
+    const response = await fetch(`${API_BASE_URL}/simulate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ homeTeamId, awayTeamId }),
+    });
     
-    const teamsData = await response.json();
-    const team = teamsData[teamId];
-    
-    if (!team) return [];
-    
-    return Object.entries(team.players).map(([playerId, player]) => ({
-      player_id: playerId,
-      ...player
-    }));
+    if (!response.ok) throw new Error('Failed to simulate game');
+    return await response.json();
   } catch (error) {
-    console.error('Error fetching players:', error);
-    return [];
+    console.error('Error simulating game:', error);
+    throw error;
   }
 };
 
-export const getTeamById = async (teamId) => {
+export const fetchGameData = async (gameId, signal = null) => {
   try {
-    const response = await fetch('/assets/teams.json');
-    if (!response.ok) {
-      throw new Error('Failed to fetch teams data');
-    }
-    
-    const teamsData = await response.json();
-    return teamsData[teamId] || null;
+    console.log("Fetching game data for ID:", gameId); // Debug output
+    const response = await fetch(`${API_BASE_URL}/games/${gameId}`);
+    if (!response.ok) throw new Error('Failed to fetch game data');
+    return await response.json();
   } catch (error) {
-    console.error('Error fetching team:', error);
-    return null;
+    console.error('Error fetching game data:', error);
+    throw error;
   }
 };

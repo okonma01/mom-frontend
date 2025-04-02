@@ -16,6 +16,7 @@ import { getAssetPath } from "../utils/paths";
 import { getTeamColors, getCourtImagePath } from "../utils/teamUtils";
 import Footer from "../components/Footer";
 import { cx } from "../utils/moduleUtils";
+import { fetchGameData } from "../utils/api";
 
 // Extracted score state hook
 function useScoreState() {
@@ -149,16 +150,13 @@ function GameSimulationPage() {
 
   // Data fetching effect
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchGame = async () => {
       try {
-        // Use AbortController to allow cancellation of fetch if component unmounts
-        const controller = new AbortController();
-        const response = await fetch(getAssetPath(`game_${gameId}.json`), {
-          signal: controller.signal,
-        });
-        const data = await response.json();
+        setLoading(true);
+        const data = await fetchGameData(gameId, controller.signal);
         setGameData(data);
-        setLoading(false);
 
         if (data.events?.length > 0) {
           const firstEvent = data.events[0];
@@ -171,7 +169,7 @@ function GameSimulationPage() {
           }
         }
 
-        return () => controller.abort();
+        setLoading(false);
       } catch (error) {
         if (error.name !== "AbortError") {
           console.error("Error loading game data:", error);
@@ -181,6 +179,9 @@ function GameSimulationPage() {
     };
 
     fetchGame();
+
+    // Cleanup function to abort fetch when component unmounts
+    return () => controller.abort();
   }, [gameId, updatePlayerStats]);
 
   // Score update handler - memoized
@@ -436,7 +437,10 @@ function GameSimulationPage() {
         </div>
 
         {activeTab === "play-by-play" && (
-          <MemoizedEventFeed events={currentEvents} gameInfo={gameData.game_info} />
+          <MemoizedEventFeed
+            events={currentEvents}
+            gameInfo={gameData.game_info}
+          />
         )}
 
         {activeTab === "box-score" && (

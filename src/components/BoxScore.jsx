@@ -2,7 +2,7 @@ import React, { useMemo, memo, useState } from "react";
 import "../styles/BoxScore.css";
 import { getPlayerImageFromGameInfo } from "../utils/playerUtils";
 import { getAssetPath } from "../utils/paths";
-import { getTeamColors } from "../utils/teamUtils";
+import { getTeamColors, getTeamDefaultImagePath } from "../utils/teamUtils";
 
 // Memoized PlayerRow component to prevent unnecessary re-renders
 const PlayerRow = memo(({ player, playerId, stats, isStarter, gameInfo, teamColor }) => {
@@ -31,8 +31,18 @@ const PlayerRow = memo(({ player, playerId, stats, isStarter, gameInfo, teamColo
           className="player-icon" 
           style={isStarter ? { borderColor: teamColor } : {}}
           onError={(e) => {
+            const teamDefaultPath = getAssetPath(getTeamDefaultImagePath(playerId, gameInfo));
+            
+            // If current src is already the team default, try global default
+            if (e.target.src.includes(teamDefaultPath)) {
+              e.target.src = getAssetPath("/assets/player icons/default.png");
+            } else {
+              // Otherwise try the team default
+              e.target.src = teamDefaultPath;
+            }
+            
+            // Prevent infinite error loops
             e.target.onerror = null;
-            e.target.src = getAssetPath("/assets/player icons/default.png");
           }}
         />
       </td>
@@ -93,7 +103,7 @@ const TeamTable = memo(({ team, teamIndex, playerStats, starterIds }) => {
         return starterIds.indexOf(aId) - starterIds.indexOf(bId);
       }
       
-      // For bench players, sort by points for better UX
+      // For bench players, sort by minutes for better UX
       const aStats = playerStats[aId] || {};
       const bStats = playerStats[bId] || {};
       return (bStats.minutes || 0) - (aStats.minutes || 0);
