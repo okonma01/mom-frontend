@@ -12,7 +12,7 @@ app = Flask(__name__, static_folder=client_dist, static_url_path='/')
 
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://make-or-miss.vercel.app", 
+        "origins": ["https://make-or-miss.vercel.app", 
                     "https://make-or-miss-daniel-okonmas-projects.vercel.app",
                     "https://make-or-miss-okonma01-daniel-okonmas-projects.vercel.app"],
         "methods": ["GET", "POST", "OPTIONS"],
