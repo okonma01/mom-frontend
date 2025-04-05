@@ -1,9 +1,57 @@
-import React, { useRef, useState, useMemo, memo, useEffect } from "react";
+import React, { useRef, useState, useMemo, memo, useEffect, useCallback } from "react";
 import styles from "../styles/BroadcastEventFeed.module.css";
 import { getTeamColors } from "../utils/teamUtils";
 
+// Add windowless virtualization helper
+const useVirtualizedEvents = (events, itemHeight = 80, bufferItems = 3) => {
+  const [visibleIndices, setVisibleIndices] = useState({ start: 0, end: 10 });
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const updateVisibleIndices = () => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const scrollTop = container.scrollTop;
+      const viewportHeight = container.clientHeight;
+
+      const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - bufferItems);
+      const endIndex = Math.min(
+        events.length - 1,
+        Math.ceil((scrollTop + viewportHeight) / itemHeight) + bufferItems
+      );
+
+      setVisibleIndices({ start: startIndex, end: endIndex });
+    };
+
+    updateVisibleIndices();
+
+    const container = containerRef.current;
+    container.addEventListener("scroll", updateVisibleIndices);
+    window.addEventListener("resize", updateVisibleIndices);
+
+    return () => {
+      container.removeEventListener("scroll", updateVisibleIndices);
+      window.removeEventListener("resize", updateVisibleIndices);
+    };
+  }, [events.length, itemHeight, bufferItems]);
+
+  return { visibleIndices, containerRef, totalHeight: events.length * itemHeight };
+};
+
+// Use memoized image path lookup
+const playerImageCache = new Map();
+
 // Move player image path generation outside the component to avoid recalculations
 const getPlayerImagePath = (playerId, gameInfo) => {
+  // Check cache first
+  const cacheKey = `${playerId}-${gameInfo?.teams?.[0]?.team_name || ""}-${gameInfo?.teams?.[1]?.team_name || ""}`;
+  if (playerImageCache.has(cacheKey)) {
+    return playerImageCache.get(cacheKey);
+  }
+
   // Find the player in game info to get their name and team
   let playerName = "";
   let teamName = "";
@@ -33,12 +81,22 @@ const getPlayerImagePath = (playerId, gameInfo) => {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
-    return `/assets/player icons/${formattedTeamName}/${formattedName}.png`;
+  const imagePath = `/assets/player icons/${formattedTeamName}/${formattedName}.png`;
 
+  // Store in cache
+  playerImageCache.set(cacheKey, imagePath);
+  return imagePath;
 };
 
-// Helper function to get team default image path
+// Helper function to get team default image path with caching
+const teamDefaultPathCache = new Map();
 const getTeamDefaultPath = (playerId, gameInfo) => {
+  // Check cache
+  const cacheKey = `${playerId}-default`;
+  if (teamDefaultPathCache.has(cacheKey)) {
+    return teamDefaultPathCache.get(cacheKey);
+  }
+
   let teamName = "";
 
   for (const team of gameInfo?.teams || []) {
@@ -51,12 +109,17 @@ const getTeamDefaultPath = (playerId, gameInfo) => {
     if (teamName) break;
   }
 
-  const formattedTeamName = teamName ? 
-    teamName.split(" ").pop().toLowerCase().replace(/\d+/g, '') : "";
-  
-  return formattedTeamName ? 
-    `/assets/player icons/${formattedTeamName}/default.png` :
-    `/assets/player icons/default.png`;
+  const formattedTeamName = teamName
+    ? teamName.split(" ").pop().toLowerCase().replace(/\d+/g, "")
+    : "";
+
+  const defaultPath = formattedTeamName
+    ? `/assets/player icons/${formattedTeamName}/default.png`
+    : `/assets/player icons/default.png`;
+
+  // Store in cache
+  teamDefaultPathCache.set(cacheKey, defaultPath);
+  return defaultPath;
 };
 
 // Memoize the event description component to prevent unnecessary re-renders
@@ -214,24 +277,34 @@ const EventDescription = memo(({ event, getPlayerName, gameInfo }) => {
 const EventItem = memo(
   ({ event, index, getPlayerName, getTeamInfo, gameInfo }) => {
     // Determine player ID and team based on event type
-    let playerId = event.player_id;
-    let teamShortName = getTeamInfo(event.team_id).shortName;
-    let teamId = event.team_id;
+    const playerId = useMemo(() => {
+      if (event.event_type === "turnover" && event.details?.steal_player_id) {
+        return event.details.steal_player_id;
+      } else if (
+        event.event_type === "substitution" &&
+        event.details?.player_in_id
+      ) {
+        return event.details.player_in_id;
+      }
+      return event.player_id;
+    }, [event.event_type, event.player_id, event.details]);
 
-    if (event.event_type === "turnover" && event.details?.steal_player_id) {
-      playerId = event.details.steal_player_id;
-      teamId = 1 - event.team_id; // Flip team ID for steal
-      teamShortName = getTeamInfo(1 - event.team_id).shortName;
-    } else if (
-      event.event_type === "substitution" &&
-      event.details?.player_in_id
-    ) {
-      playerId = event.details.player_in_id;
-    }
+    // Determine team ID based on event type
+    const teamId = useMemo(() => {
+      if (event.event_type === "turnover" && event.details?.steal_player_id) {
+        return 1 - event.team_id; // Flip team ID for steal
+      }
+      return event.team_id;
+    }, [event.event_type, event.team_id, event.details]);
+
+    // Get team short name
+    const teamShortName = useMemo(() => {
+      return getTeamInfo(teamId).shortName;
+    }, [teamId, getTeamInfo]);
 
     // Get team color
     const teamColor = useMemo(() => {
-      const team_name = gameInfo.teams[teamId].team_name;
+      const team_name = gameInfo?.teams?.[teamId]?.team_name;
       if (!team_name) {
         return null;
       }
@@ -239,46 +312,66 @@ const EventItem = memo(
     }, [teamId, gameInfo]);
 
     // Compute class names for the event
-    let classNames = styles.broadcast_event;
-    if (
-      event.event_type === "quarter_end" ||
-      event.event_type === "game_over"
-    ) {
-      classNames += " event_period";
-    } else if (event.event_type === "shot_made") {
-      classNames += " event_score";
-      if (event.details?.shot_type === "fga_threepoint") {
-        classNames += " event_three";
+    const classNames = useMemo(() => {
+      let names = styles.broadcast_event;
+      
+      if (
+        event.event_type === "quarter_end" ||
+        event.event_type === "game_over"
+      ) {
+        names += " event_period";
+      } else if (event.event_type === "shot_made") {
+        names += " event_score";
+        if (event.details?.shot_type === "fga_threepoint") {
+          names += " event_three";
+        }
+      } else if (
+        event.event_type === "turnover" &&
+        event.details?.steal_player_id
+      ) {
+        names += " event_steal";
       }
-    } else if (
-      event.event_type === "turnover" &&
-      event.details?.steal_player_id
-    ) {
-      classNames += " event_steal";
-    }
+      
+      return names;
+    }, [event.event_type, event.details]);
+
+    // Memoize player image source to prevent repeated calculations
+    const playerImgSrc = useMemo(() => {
+      if (!playerId) return null;
+      return getPlayerImagePath(playerId, gameInfo);
+    }, [playerId, gameInfo]);
+    
+    // Use a ref to prevent infinite error loops in image error handling
+    const imgErrorHandled = useRef(false);
+
+    // Handle image error only once
+    const handleImageError = useCallback((e) => {
+      if (imgErrorHandled.current) return;
+      
+      const teamDefaultPath = getTeamDefaultPath(playerId, gameInfo);
+      
+      // If current src is already the team default, try global default
+      if (e.target.src.includes(teamDefaultPath)) {
+        e.target.src = `/assets/player icons/default.png`;
+      } else {
+        // Otherwise try the team default
+        e.target.src = teamDefaultPath;
+      }
+      
+      // Prevent infinite error loops
+      imgErrorHandled.current = true;
+      e.target.onerror = null;
+    }, [playerId, gameInfo]);
 
     return (
       <div className={classNames}>
         {playerId && (
-            <img
-              src={getPlayerImagePath(playerId, gameInfo)}
-              alt="Player"
-              className={styles.player_icon}
-              onError={(e) => {
-                const teamDefaultPath = getTeamDefaultPath(playerId, gameInfo);
-                
-                // If current src is already the team default, try global default
-                if (e.target.src.includes(teamDefaultPath)) {
-                  e.target.src = `/assets/player icons/default.png`;
-                } else {
-                  // Otherwise try the team default
-                  e.target.src = teamDefaultPath;
-                }
-                
-                // Prevent infinite error loops
-                e.target.onerror = null;
-              }}
-            />
+          <img
+            src={playerImgSrc}
+            alt="Player"
+            className={styles.player_icon}
+            onError={handleImageError}
+          />
         )}
         <div className={styles.event_time}>
           {event.quarter}Q {event.timestamp}
@@ -297,6 +390,15 @@ const EventItem = memo(
           />
         </div>
       </div>
+    );
+  },
+  // Custom comparison function for memo to avoid unnecessary rerenders
+  (prevProps, nextProps) => {
+    // Only re-render if the event or index changes
+    return (
+      prevProps.event === nextProps.event &&
+      prevProps.index === nextProps.index &&
+      prevProps.gameInfo === nextProps.gameInfo
     );
   }
 );
@@ -349,6 +451,10 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
     setIsCollapsed(!isCollapsed);
   };
 
+  const { visibleIndices, containerRef, totalHeight } = useVirtualizedEvents(
+    reversedEvents
+  );
+
   return (
     <div
       className={`${styles.broadcast_feed_container} ${
@@ -364,19 +470,32 @@ const BroadcastEventFeed = ({ events, gameInfo }) => {
           </span>
         </h3>
       </div>
-      <div className={styles.broadcast_content}>
-        <div className={styles.broadcast_events} style={{ maxHeight: "420px" }}>
-          {reversedEvents.map((event, index) => (
-            <EventItem
-              key={`${event.quarter}-${event.timestamp}-${index}`}
-              event={event}
-              index={index}
-              getPlayerName={getPlayerName}
-              getTeamInfo={getTeamInfo}
-              gameInfo={gameInfo}
-            />
-          ))}
-          <div ref={feedEndRef} />
+      <div className={styles.broadcast_content} ref={containerRef}>
+        <div 
+          className={styles.broadcast_events} 
+          style={{ height: totalHeight }}
+        >
+          {reversedEvents.slice(visibleIndices.start, visibleIndices.end + 1).map((event, i) => {
+            const index = i + visibleIndices.start;
+            return (
+              <div 
+                key={`${event.quarter}-${event.timestamp}-${index}`}
+                style={{
+                  position: 'absolute',
+                  top: `${index * 80}px`,
+                  width: '100%'
+                }}
+              >
+                <EventItem
+                  event={event}
+                  index={index}
+                  getPlayerName={getPlayerName}
+                  getTeamInfo={getTeamInfo}
+                  gameInfo={gameInfo}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

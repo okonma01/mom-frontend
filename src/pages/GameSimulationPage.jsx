@@ -438,7 +438,7 @@ function GameSimulationPage() {
 
         {activeTab === "play-by-play" && (
           <MemoizedEventFeed
-            events={currentEvents}
+            events={currentEvents.slice(Math.max(0, currentEvents.length - 50))} // Only show the last 100 events
             gameInfo={gameData.game_info}
           />
         )}
