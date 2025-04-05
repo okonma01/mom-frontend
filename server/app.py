@@ -3,9 +3,12 @@ import json
 from flask import Flask, jsonify, request, send_from_directory 
 from flask_cors import CORS
 import os
+from pathlib import Path
 
-app = Flask(__name__, static_folder='../client/dist', static_url_path='/')
-app.config['JSONIFY_PRETTYPRINT_REGULAR'] = True
+app_dir = os.path.abspath(os.path.dirname(__file__))
+client_dist = Path(app_dir).parent / 'client' / 'dist'
+
+app = Flask(__name__, static_folder=client_dist, static_url_path='/')
 
 CORS(app, resources={
     r"/api/*": {
@@ -17,7 +20,14 @@ CORS(app, resources={
 
 @app.route('/')
 def index():
-    return send_from_directory(app.static_folder, 'index.html')
+    try:
+        path = os.path.join(app.static_folder, 'index.html')
+        app.logger.info(f"Looking for index.html at: {path}")
+        app.logger.info(f"File exists: {os.path.exists(path)}")
+        return send_from_directory(app.static_folder, 'index.html')
+    except Exception as e:
+        app.logger.error(f"Error serving index.html: {str(e)}")
+        return str(e), 500
 
 @app.route('/api/test', methods=['GET'])
 def test():
