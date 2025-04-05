@@ -2,6 +2,19 @@ from util.team_util import load_team_from_csv, load_team_from_json
 from game.index import Game
 import os
 
+def delete_game_files(g: str):
+    """
+    Delete all game files except the one with the given ID
+    Args:
+        g: Game ID to keep
+    """
+    # Get all game files in the directory
+    game_files = os.listdir('data/games')
+
+    # Iterate over each file and delete it if it doesn't match the given ID
+    for file in game_files:
+        if file != f"game_{g}.json":
+            os.remove(os.path.join('data', 'games', file))
 
 def run_simulation_and_save_events(home_team_id, away_team_id):
     """

@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://render-mom.onrender.com/api';
+const API_BASE_URL = 'https://make-or-miss.vercel.app/api';
 
 // Function to fetch teams from the JSON file
 export const fetchTeams = async () => {
