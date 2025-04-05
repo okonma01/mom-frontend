@@ -1,5 +1,6 @@
 import React, { useRef, useState, useMemo, memo, useEffect } from "react";
 import styles from "../styles/BroadcastEventFeed.module.css";
+import { getTeamColors } from "../utils/teamUtils";
 
 // Move player image path generation outside the component to avoid recalculations
 const getPlayerImagePath = (playerId, gameInfo) => {
@@ -215,9 +216,11 @@ const EventItem = memo(
     // Determine player ID and team based on event type
     let playerId = event.player_id;
     let teamShortName = getTeamInfo(event.team_id).shortName;
+    let teamId = event.team_id;
 
     if (event.event_type === "turnover" && event.details?.steal_player_id) {
       playerId = event.details.steal_player_id;
+      teamId = 1 - event.team_id; // Flip team ID for steal
       teamShortName = getTeamInfo(1 - event.team_id).shortName;
     } else if (
       event.event_type === "substitution" &&
@@ -225,6 +228,15 @@ const EventItem = memo(
     ) {
       playerId = event.details.player_in_id;
     }
+
+    // Get team color
+    const teamColor = useMemo(() => {
+      const team_name = gameInfo.teams[teamId].team_name;
+      if (!team_name) {
+        return null;
+      }
+      return getTeamColors(team_name).primary;
+    }, [teamId, gameInfo]);
 
     // Compute class names for the event
     let classNames = styles.broadcast_event;
@@ -271,7 +283,12 @@ const EventItem = memo(
         <div className={styles.event_time}>
           {event.quarter}Q {event.timestamp}
         </div>
-        <div className={styles.event_team}>{teamShortName}</div>
+        <div 
+          className={styles.event_team} 
+          style={teamColor ? { color: teamColor } : {}}
+        >
+          {teamShortName}
+        </div>
         <div className={styles.event_description}>
           <EventDescription
             event={event}
@@ -284,7 +301,7 @@ const EventItem = memo(
   }
 );
 
-const BroadcastEventFeed = ({ events, gameInfo, isLive }) => {
+const BroadcastEventFeed = ({ events, gameInfo }) => {
   const feedRef = useRef(null);
   const feedEndRef = useRef(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -341,12 +358,10 @@ const BroadcastEventFeed = ({ events, gameInfo, isLive }) => {
       <div className={styles.broadcast_header} onClick={toggleCollapse}>
         <h3>
           Play-by-Play
-          {isLive && (
-            <span className={styles.live_indicator}>
-              <span className={styles.live_dot}></span>
-              LIVE
-            </span>
-          )}
+          <span className={styles.live_indicator}>
+            <span className={styles.live_dot}></span>
+            LIVE
+          </span>
         </h3>
       </div>
       <div className={styles.broadcast_content}>

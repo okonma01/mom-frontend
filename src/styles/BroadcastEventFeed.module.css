@@ -38,30 +38,29 @@
 
 .broadcast_content {
   flex-grow: 1;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .broadcast_events {
   display: flex;
   flex-direction: column;
   gap: 0.8rem;
-  overflow-y: auto;
   padding-right: 10px;
   font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
-.broadcast_events::-webkit-scrollbar {
+.broadcast_content::-webkit-scrollbar {
   width: 6px;
   background-color: transparent;
 }
 
-.broadcast_events::-webkit-scrollbar-thumb {
+.broadcast_content::-webkit-scrollbar-thumb {
   background-color: rgba(0, 0, 0, 0.1);
   border-radius: 3px;
 }
 
-.broadcast_events::-webkit-scrollbar-thumb:hover {
+.broadcast_content::-webkit-scrollbar-thumb:hover {
   background-color: rgba(0, 0, 0, 0.2);
 }
 
