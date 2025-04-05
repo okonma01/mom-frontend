@@ -132,6 +132,7 @@
   cursor: pointer;
   border: none;
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.15);
+  margin-top: -7px;
 }
 
 .speed_control input[type="range"]::-moz-range-thumb {
@@ -367,11 +368,5 @@
   .speed_button {
     font-size: 0.75rem;
     padding: 0.15rem 0.5rem;
-  }
-}
-
-@media (min-width: 992px) {
-  .speed_control input[type="range"]::-webkit-slider-thumb {
-    margin-top: -7px; /* Adjust to vertically center the thumb */
   }
 }
