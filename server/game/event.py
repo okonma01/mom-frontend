@@ -148,6 +148,41 @@ class GameEventLog:
         }
         return json.dumps(data, indent=2)
 
+    def to_dict(self) -> dict:
+        """Convert to dictionary format for Vercel Blob storage"""
+        return {
+            "game_info": {
+                "game_id": self.game_id,
+                "date": self.date,
+                "teams": self.teams
+            },
+            "events": [
+                {
+                    "event_type": e.event_type,
+                    "timestamp": self._format_timestamp(e.timestamp),
+                    "quarter": e.quarter,
+                    "team_id": e.team_id,
+                    "player_id": e.player_id,
+                    "details": e.details
+                } for e in self.events
+            ],
+            "checkpoints": [
+                {
+                    "checkpoint_id": cp.checkpoint_id,
+                    "timestamp": cp.timestamp,
+                    "game_time": cp.game_time,
+                    "quarter": cp.quarter,
+                    "home_score": cp.home_score,
+                    "away_score": cp.away_score,
+                    "current_state": cp.current_state,
+                    "offensive_team_id": cp.offensive_team_id,
+                    "player_states": cp.player_states,
+                    "last_event_index": cp.last_event_index,
+                    "team_stats": cp.team_stats
+                } for cp in self.checkpoints
+            ]
+        }
+
     @staticmethod
     def _format_timestamp(seconds: float) -> str:
         # Convert seconds to MM:SS format
@@ -400,7 +435,30 @@ class GameLogger:
         return checkpoint_id
 
     def save_to_file(self, filename=None) -> str:
-        # Save the event log to a JSON file
+        """Save the event log to a JSON file or Vercel Blob storage
+
+        Args:
+            filename: Optional filename to save to (only used for local file system)
+
+        Returns:
+            filename or blob URL if successful
+        """
+        # Check if we're in Vercel environment
+        from util.vercel_blob_util import is_vercel_environment, put
+        
+        if is_vercel_environment():
+            # Use Vercel Blob storage
+            try:
+                game_data = self.event_log.to_dict()
+                import json
+                json_data = json.dumps(game_data)
+                result = put(f"games/game_{self.event_log.game_id}.json", json_data, {"access": "public"})
+                return result.get('url', 'Unknown URL')
+            except Exception as e:
+                print(f"Error saving to Vercel Blob: {str(e)}")
+                # Fall back to local file system
+        
+        # Use local file system
         if filename is None:
             filename = f"data/games/game_{self.event_log.game_id}.json"
 
