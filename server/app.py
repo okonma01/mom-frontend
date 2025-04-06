@@ -1,6 +1,6 @@
 # Example using Flask
 import json
-from flask import Flask, jsonify, request, send_from_directory, render_template
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import os, sys
 from pathlib import Path
@@ -22,7 +22,7 @@ if not games_dir.exists():
 client_dist = Path(app_dir).parent / 'client' / 'dist'
 
 app = Flask(__name__, static_folder=client_dist, static_url_path='/')
-dotenv.load_dotenv()
+dotenv.load_dotenv(dotenv_path=Path(app_dir).parent / '.env')
 
 # Update CORS configuration to be more permissive and handle OPTIONS properly
 CORS(app, resources={
