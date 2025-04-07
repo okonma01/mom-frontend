@@ -1,5 +1,11 @@
-const API_BASE_URL = 'https://render-mom.onrender.com/api';
+// Update the API_BASE_URL to be relative in production and absolute in development
+const isDevelopment = window.location.hostname === 'localhost' || 
+                     window.location.hostname === '127.0.0.1';
 
+const API_BASE_URL = isDevelopment
+  ? `http://${window.location.hostname}:5000/api`
+  : "https://mom-frontend.fly.dev/api"; ;
+  
 // Function to fetch teams from the JSON file
 export const fetchTeams = async () => {
   try {

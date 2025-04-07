@@ -1,4 +1,4 @@
-from util.team_util import load_team_from_csv, load_team_from_json
+from util.team_util import load_team_from_json
 from game.index import Game
 import os
 
@@ -37,4 +37,4 @@ def run_simulation_and_save_events(home_team_id, away_team_id):
 
 
 # Run the simulation
-g = run_simulation_and_save_events('celtics24', 'nuggets23')
+# g = run_simulation_and_save_events('celtics24', 'nuggets23')

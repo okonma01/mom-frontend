@@ -1,0 +1,17 @@
+# flyctl launch added from .gitignore
+**/server/mom_venv
+
+# flyctl launch added from client/.gitignore
+client/**/node_modules/.cache/gh-pages
+
+# OS specific
+client/**/.DS_Store
+client/**/Thumbs.db
+
+# Environment
+client/**/.env.local
+client/**/.env.*.local
+
+# Build artifacts
+client/dist
+fly.toml

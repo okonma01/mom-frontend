@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 function WelcomePage() {
   return (
     <div className="welcome-container">
-      <video className="background-video" autoPlay loop muted>
+      <video className="background-video" autoPlay loop muted playsInline>
         <source src="/assets/bg.mov" type="video/quicktime" />
       </video>
       <div className="welcome-content">

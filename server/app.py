@@ -12,7 +12,11 @@ app = Flask(__name__, static_folder=client_dist, static_url_path='/')
 
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:5000", "http://127.0.0.1:5000", "https://render-mom.onrender.com"],
+        "origins": ["http://localhost:5000",
+                    "https://mom-frontend.fly.dev",
+                    "http://127.0.0.1:5000", 
+                    "http://localhost:5173", 
+                    "https://render-mom.onrender.com"],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"]
     }
@@ -21,6 +25,8 @@ CORS(app, resources={
 @app.route('/')
 def index():
     try:
+        from util.game_util import delete_games
+        delete_games()
         path = os.path.join(app.static_folder, 'index.html')
         app.logger.info(f"Looking for index.html at: {path}")
         app.logger.info(f"File exists: {os.path.exists(path)}")
@@ -72,4 +78,6 @@ def get_game(game_id):
 
 
 if __name__ == '__main__':
-    app.run()
+    # Get port from environment variable or use 8080 as default
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)
